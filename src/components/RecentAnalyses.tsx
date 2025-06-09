@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Music, Play, Loader2 } from 'lucide-react';
+import { Clock, Music, Play, Loader2, Sparkles, TrendingUp, Heart } from 'lucide-react';
 import { AnalysisResult, StoredAnalysis } from '../types';
 import toast from 'react-hot-toast';
 
@@ -47,18 +47,18 @@ const RecentAnalyses: React.FC<RecentAnalysesProps> = ({ onSelectAnalysis }) => 
     onSelectAnalysis(result, fileUrl);
   };
 
-  const getEmotionEmoji = (emotion: string) => {
-    const emojis = {
-      happy: '😊',
-      sad: '😢',
-      angry: '😠',
-      surprised: '😲',
-      calm: '😌',
-      neutral: '😐',
-      fearful: '😨',
-      disgusted: '🤢'
+  const getMoodTheme = (emotion: string) => {
+    const themes = {
+      happy: { emoji: '😊', gradient: 'from-yellow-400 to-orange-500', color: 'text-yellow-300' },
+      sad: { emoji: '😢', gradient: 'from-blue-400 to-indigo-600', color: 'text-blue-300' },
+      angry: { emoji: '😠', gradient: 'from-red-400 to-red-600', color: 'text-red-300' },
+      surprised: { emoji: '😲', gradient: 'from-purple-400 to-pink-500', color: 'text-purple-300' },
+      calm: { emoji: '😌', gradient: 'from-green-400 to-teal-500', color: 'text-green-300' },
+      neutral: { emoji: '😐', gradient: 'from-gray-400 to-gray-600', color: 'text-gray-300' },
+      fearful: { emoji: '😨', gradient: 'from-purple-600 to-indigo-800', color: 'text-purple-300' },
+      disgusted: { emoji: '🤢', gradient: 'from-green-600 to-yellow-600', color: 'text-green-300' }
     };
-    return emojis[emotion as keyof typeof emojis] || '😐';
+    return themes[emotion as keyof typeof themes] || themes.neutral;
   };
 
   const formatDate = (dateString: string) => {
@@ -73,112 +73,240 @@ const RecentAnalyses: React.FC<RecentAnalysesProps> = ({ onSelectAnalysis }) => 
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20 text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card-strong rounded-4xl p-16 border border-white/30 text-center relative overflow-hidden"
         >
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-purple-600/10 animate-gradient-xy" />
+          
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="inline-block p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mb-6"
+            animate={{ 
+              rotate: 360,
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ 
+              rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+              scale: { duration: 2, repeat: Infinity }
+            }}
+            className="inline-block p-6 bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-3xl mb-8 glow-effect relative z-10"
           >
-            <Loader2 className="w-8 h-8 text-white" />
+            <Loader2 className="w-12 h-12 text-white" />
           </motion.div>
-          <h3 className="text-xl font-semibold text-white">Loading your vibe history...</h3>
+          
+          <motion.h3 
+            className="text-4xl font-bold gradient-text mb-4 relative z-10"
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            Loading your vibe history...
+          </motion.h3>
+          
+          <motion.p 
+            className="text-xl text-purple-200 relative z-10"
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            Gathering all your amazing musical moments
+          </motion.p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        transition={{ duration: 0.8 }}
+        className="mb-12 text-center"
       >
-        <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+        <motion.h2 
+          className="text-6xl font-bold gradient-text mb-6"
+          animate={{ 
+            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+          }}
+          transition={{ duration: 5, repeat: Infinity }}
+        >
           Your Vibe History
-        </h2>
-        <p className="text-xl text-gray-300">
-          Revisit your past moods and rediscover amazing playlists
-        </p>
+        </motion.h2>
+        <motion.p 
+          className="text-2xl text-purple-100 max-w-3xl mx-auto leading-relaxed"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          Revisit your past moods and rediscover amazing playlists that captured your essence
+        </motion.p>
       </motion.div>
 
       {analyses.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20 text-center"
+          className="glass-card-strong rounded-4xl p-16 border border-white/30 text-center relative overflow-hidden"
         >
-          <div className="inline-block p-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl mb-6">
-            <Clock className="w-12 h-12 text-purple-400" />
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-4">No vibes yet!</h3>
-          <p className="text-gray-300 mb-6">
-            Upload your first photo or video to start building your vibe history.
-          </p>
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-purple-600/10" />
+          
+          <motion.div 
+            className="inline-block p-8 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl mb-8 relative z-10"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            <Clock className="w-16 h-16 text-purple-400" />
+          </motion.div>
+          
+          <motion.h3 
+            className="text-4xl font-bold gradient-text mb-6 relative z-10"
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+          >
+            No vibes captured yet!
+          </motion.h3>
+          
+          <motion.p 
+            className="text-xl text-purple-200 mb-8 relative z-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Upload your first photo or video to start building your personal vibe collection.
+          </motion.p>
+          
+          <motion.div
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="relative z-10"
+          >
+            <Sparkles className="w-8 h-8 text-yellow-400 mx-auto" />
+          </motion.div>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           <AnimatePresence>
-            {analyses.map((analysis, index) => (
-              <motion.div
-                key={analysis.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                onClick={() => handleSelectAnalysis(analysis)}
-                className="group bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-purple-500/50 cursor-pointer transition-all hover:bg-white/15"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-3xl">
-                      {getEmotionEmoji(analysis.dominant_emotion)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white capitalize group-hover:text-purple-300 transition-colors">
-                        {analysis.dominant_emotion}
-                      </h3>
-                      <p className="text-sm text-gray-400">
-                        {(analysis.confidence * 100).toFixed(1)}% confidence
-                      </p>
-                    </div>
-                  </div>
+            {analyses.map((analysis, index) => {
+              const moodTheme = getMoodTheme(analysis.dominant_emotion);
+              
+              return (
+                <motion.div
+                  key={analysis.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  onClick={() => handleSelectAnalysis(analysis)}
+                  className="group glass-card-strong rounded-3xl p-8 border border-white/30 hover:border-purple-400/60 cursor-pointer transition-all duration-300 hover:shadow-2xl relative overflow-hidden"
+                >
+                  {/* Animated background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 via-pink-600/5 to-purple-600/5 group-hover:from-purple-600/10 group-hover:via-pink-600/10 group-hover:to-purple-600/10 transition-all duration-300" />
                   
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Play className="w-5 h-5 text-purple-400" />
-                  </div>
-                </div>
-
-                <p className="text-gray-300 text-sm mb-4 line-clamp-3">
-                  {analysis.vibe}
-                </p>
-
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                      <Music className="w-3 h-3" />
-                      <span>{JSON.parse(analysis.playlist).length} songs</span>
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center space-x-4">
+                        <motion.div 
+                          className="text-4xl"
+                          animate={{ 
+                            scale: [1, 1.1, 1],
+                            rotate: [0, 5, -5, 0]
+                          }}
+                          transition={{ 
+                            duration: 4,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        >
+                          {moodTheme.emoji}
+                        </motion.div>
+                        <div>
+                          <motion.h3 
+                            className="font-bold text-xl text-white capitalize group-hover:text-purple-300 transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                          >
+                            {analysis.dominant_emotion}
+                          </motion.h3>
+                          <p className={`text-sm font-semibold ${moodTheme.color}`}>
+                            {(analysis.confidence * 100).toFixed(1)}% confidence
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <motion.div 
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        whileHover={{ scale: 1.2, rotate: 5 }}
+                      >
+                        <Play className="w-6 h-6 text-purple-400" />
+                      </motion.div>
                     </div>
-                    <div className="capitalize">{analysis.mood_category}</div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-3 h-3" />
-                    <span>{formatDate(analysis.created_at)}</span>
-                  </div>
-                </div>
 
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <div className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-sm text-purple-400 font-medium">Click to view details</span>
+                    <motion.p 
+                      className="text-purple-200 text-sm mb-6 line-clamp-3 leading-relaxed"
+                      initial={{ opacity: 0.8 }}
+                      whileHover={{ opacity: 1 }}
+                    >
+                      {analysis.vibe}
+                    </motion.p>
+
+                    <div className="flex items-center justify-between text-xs text-purple-300 mb-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <Music className="w-4 h-4" />
+                          <span className="font-semibold">{JSON.parse(analysis.playlist).length} songs</span>
+                        </div>
+                        <div className={`capitalize font-semibold ${moodTheme.color}`}>
+                          {analysis.mood_category}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4" />
+                        <span className="font-medium">{formatDate(analysis.created_at)}</span>
+                      </div>
+                    </div>
+
+                    <motion.div 
+                      className="pt-4 border-t border-white/20"
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="flex items-center justify-center space-x-2">
+                        <TrendingUp className="w-4 h-4 text-purple-400" />
+                        <span className="text-sm text-purple-400 font-semibold">Click to explore playlist</span>
+                      </div>
+                    </motion.div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+
+                  {/* Floating sparkles */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {[...Array(3)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute"
+                        animate={{
+                          x: [0, 30, 0],
+                          y: [0, -20, 0],
+                          opacity: [0, 0.6, 0],
+                          scale: [0.5, 1, 0.5],
+                        }}
+                        transition={{
+                          duration: 3 + i,
+                          repeat: Infinity,
+                          delay: i * 0.5,
+                        }}
+                        style={{
+                          left: `${20 + i * 25}%`,
+                          top: `${15 + i * 20}%`,
+                        }}
+                      >
+                        <Sparkles className="w-3 h-3 text-purple-300" />
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       )}

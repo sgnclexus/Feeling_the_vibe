@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Camera, Video, Loader2 } from 'lucide-react';
+import { Upload, Camera, Video, Loader2, Sparkles, Music, Heart, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { EmotionDetector } from '../services/emotionDetector';
 import { AnalysisResult } from '../types';
@@ -25,10 +25,10 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
     setUploadProgress(0);
 
     try {
-      // Simulate upload progress
+      // Simulate upload progress with smooth animation
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90));
-      }, 100);
+        setUploadProgress(prev => Math.min(prev + 8, 90));
+      }, 120);
 
       // Upload file
       const formData = new FormData();
@@ -50,7 +50,13 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      toast.success('File uploaded successfully! Analyzing emotions...');
+      toast.success('✨ File uploaded! Reading your emotions...', {
+        style: {
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          border: 'none',
+        },
+      });
 
       // Analyze emotions
       const emotions = await emotionDetector.detectEmotions(file);
@@ -72,7 +78,13 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
       const analysisResult = await analysisResponse.json();
       setIsAnalyzing(false);
       
-      toast.success('Analysis complete! Check out your personalized playlist.');
+      toast.success('🎵 Your vibe playlist is ready!', {
+        style: {
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          color: 'white',
+          border: 'none',
+        },
+      });
       onAnalysisComplete(analysisResult, `http://localhost:3001${uploadResult.file.path}`);
 
     } catch (error) {
@@ -80,7 +92,13 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
       setIsUploading(false);
       setIsAnalyzing(false);
       setUploadProgress(0);
-      toast.error('Something went wrong. Please try again.');
+      toast.error('Oops! Something went wrong. Please try again.', {
+        style: {
+          background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+          color: 'white',
+          border: 'none',
+        },
+      });
     }
   }, [emotionDetector, onAnalysisComplete]);
 
@@ -96,42 +114,95 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
 
   if (isUploading || isAnalyzing) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-white/20"
+          className="relative glass-card-strong rounded-4xl p-16 overflow-hidden"
         >
-          <div className="text-center">
+          {/* Animated background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 via-pink-600/20 to-purple-600/20 animate-gradient-xy" />
+          
+          <div className="relative z-10 text-center">
             <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="inline-block p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mb-6"
+              animate={{ 
+                rotate: 360,
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+                scale: { duration: 2, repeat: Infinity }
+              }}
+              className="inline-block p-6 bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-3xl mb-8 glow-effect"
             >
-              <Loader2 className="w-8 h-8 text-white" />
+              <Loader2 className="w-12 h-12 text-white" />
             </motion.div>
             
-            <h3 className="text-2xl font-bold text-white mb-4">
-              {isUploading ? 'Uploading your media...' : 'Analyzing your emotions...'}
-            </h3>
+            <motion.h3 
+              className="text-4xl font-bold gradient-text mb-6"
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {isUploading ? '🚀 Uploading your vibe...' : '🧠 Reading your emotions...'}
+            </motion.h3>
             
             {isUploading && (
-              <div className="w-full bg-gray-700 rounded-full h-2 mb-4">
-                <motion.div
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${uploadProgress}%` }}
-                  transition={{ duration: 0.5 }}
-                />
+              <div className="w-full max-w-md mx-auto mb-6">
+                <div className="bg-white/10 rounded-full h-3 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${uploadProgress}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  />
+                </div>
+                <motion.p 
+                  className="text-purple-200 mt-3 font-medium"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  {uploadProgress}% complete
+                </motion.p>
               </div>
             )}
             
-            <p className="text-gray-300">
+            <motion.p 
+              className="text-xl text-purple-100 max-w-lg mx-auto leading-relaxed"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
               {isUploading 
-                ? 'Please wait while we upload your file...' 
-                : 'Our AI is reading your emotions and curating the perfect playlist for your vibe...'
+                ? 'Preparing your media for emotional analysis...' 
+                : 'Our AI is diving deep into your emotions and curating the perfect soundtrack for your soul...'
               }
-            </p>
+            </motion.p>
+
+            {/* Floating icons */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[Music, Heart, Sparkles, Zap].map((Icon, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute"
+                  animate={{
+                    x: [0, 50, 0],
+                    y: [0, -30, 0],
+                    rotate: [0, 180, 360],
+                    opacity: [0.3, 0.7, 0.3],
+                  }}
+                  transition={{
+                    duration: 4 + i,
+                    repeat: Infinity,
+                    delay: i * 0.5,
+                  }}
+                  style={{
+                    left: `${15 + i * 20}%`,
+                    top: `${20 + i * 15}%`,
+                  }}
+                >
+                  <Icon className="w-6 h-6 text-purple-300" />
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.div>
       </div>
@@ -139,107 +210,217 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-12"
+        transition={{ duration: 0.8 }}
+        className="text-center mb-16"
       >
-        <h2 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-6">
+        <motion.h2 
+          className="text-6xl md:text-7xl font-bold gradient-text mb-8 text-shadow-lg"
+          animate={{ 
+            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+          }}
+          transition={{ duration: 5, repeat: Infinity }}
+        >
           What's Your Vibe Today?
-        </h2>
-        <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-          Upload a photo or short video and let our AI analyze your emotions to create 
+        </motion.h2>
+        <motion.p 
+          className="text-2xl text-purple-100 max-w-3xl mx-auto leading-relaxed font-medium"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          Upload a photo or video and let our AI analyze your emotions to create 
           the perfect playlist that matches your current mood and energy.
-        </p>
+        </motion.p>
       </motion.div>
 
       <motion.div
         {...getRootProps()}
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: 1.02, y: -5 }}
         whileTap={{ scale: 0.98 }}
-        className={`relative cursor-pointer transition-all duration-300 ${
+        className={`relative cursor-pointer transition-all duration-500 group ${
           isDragActive
-            ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-400'
-            : 'bg-white/5 hover:bg-white/10 border-white/20 hover:border-purple-400'
-        } backdrop-blur-lg rounded-3xl border-2 border-dashed p-16`}
+            ? 'glass-card-strong border-purple-400 shadow-2xl glow-effect'
+            : 'glass-card border-white/30 hover:border-purple-400 hover:shadow-2xl'
+        } rounded-4xl border-2 border-dashed p-20 overflow-hidden`}
       >
         <input {...getInputProps()} />
         
-        <div className="text-center">
+        {/* Animated background gradient */}
+        <div className={`absolute inset-0 transition-opacity duration-500 ${
+          isDragActive ? 'opacity-30' : 'opacity-0 group-hover:opacity-20'
+        } bg-gradient-to-br from-purple-600 via-pink-600 to-purple-600 animate-gradient-xy`} />
+        
+        <div className="relative z-10 text-center">
           <motion.div
             animate={{ 
-              y: isDragActive ? -10 : 0,
-              rotate: isDragActive ? 5 : 0 
+              y: isDragActive ? -15 : 0,
+              rotate: isDragActive ? 10 : 0,
+              scale: isDragActive ? 1.1 : 1
             }}
-            className="inline-block p-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl mb-8"
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="inline-block p-8 bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-3xl mb-10 glow-effect group-hover:shadow-2xl transition-shadow duration-500"
           >
-            {isDragActive ? (
-              <Upload className="w-12 h-12 text-white" />
-            ) : (
-              <Camera className="w-12 h-12 text-white" />
-            )}
+            <AnimatePresence mode="wait">
+              {isDragActive ? (
+                <motion.div
+                  key="upload"
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: 180 }}
+                >
+                  <Upload className="w-16 h-16 text-white" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="camera"
+                  initial={{ scale: 0, rotate: 180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: -180 }}
+                  className="relative"
+                >
+                  <Camera className="w-16 h-16 text-white" />
+                  <motion.div
+                    animate={{ scale: [1, 1.3, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute -top-2 -right-2"
+                  >
+                    <Sparkles className="w-6 h-6 text-yellow-300" />
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
-          <h3 className="text-3xl font-bold text-white mb-4">
-            {isDragActive ? 'Drop it like it\'s hot!' : 'Ready to feel the vibe?'}
-          </h3>
+          <motion.h3 
+            className="text-4xl font-bold text-white mb-6"
+            animate={{ 
+              color: isDragActive ? '#f0abfc' : '#ffffff'
+            }}
+          >
+            {isDragActive ? 'Drop it like it\'s hot! 🔥' : 'Ready to feel the vibe? ✨'}
+          </motion.h3>
           
-          <p className="text-lg text-gray-300 mb-8">
+          <motion.p 
+            className="text-xl text-purple-100 mb-10 font-medium"
+            animate={{
+              scale: isDragActive ? 1.05 : 1,
+              color: isDragActive ? '#e879f9' : '#e2e8f0'
+            }}
+          >
             {isDragActive 
-              ? 'Release to upload your media'
+              ? 'Release to upload your media and discover your vibe'
               : 'Drag & drop your photo or video here, or click to browse'
             }
-          </p>
+          </motion.p>
 
-          <div className="flex justify-center space-x-8 mb-8">
-            <div className="flex items-center space-x-2 text-gray-400">
-              <Camera className="w-5 h-5" />
-              <span>Photos</span>
-            </div>
-            <div className="flex items-center space-x-2 text-gray-400">
-              <Video className="w-5 h-5" />
-              <span>Videos</span>
-            </div>
+          <div className="flex justify-center space-x-12 mb-10">
+            {[
+              { icon: Camera, label: 'Photos', color: 'from-blue-400 to-purple-500' },
+              { icon: Video, label: 'Videos', color: 'from-pink-400 to-red-500' }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                className="flex items-center space-x-3 text-purple-200 group-hover:text-white transition-colors"
+                whileHover={{ scale: 1.1, y: -2 }}
+              >
+                <div className={`p-2 bg-gradient-to-r ${item.color} rounded-xl`}>
+                  <item.icon className="w-6 h-6 text-white" />
+                </div>
+                <span className="font-semibold">{item.label}</span>
+              </motion.div>
+            ))}
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, y: -3 }}
             whileTap={{ scale: 0.95 }}
-            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-purple-500/25 transition-all"
+            className="px-12 py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white font-bold text-lg rounded-2xl shadow-2xl glow-effect hover:shadow-purple-500/50 transition-all duration-300 group-hover:from-purple-500 group-hover:to-pink-500"
           >
-            Choose Media File
+            Choose Your Vibe File
           </motion.button>
 
-          <p className="text-sm text-gray-500 mt-6">
+          <motion.p 
+            className="text-sm text-purple-300 mt-8 font-medium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
             Supports JPEG, PNG, GIF, MP4, WebM, MOV • Max size: 10MB
-          </p>
+          </motion.p>
+        </div>
+
+        {/* Floating elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-40"
+              animate={{
+                x: [0, 100, 0],
+                y: [0, -80, 0],
+                scale: [1, 1.5, 1],
+                opacity: [0.2, 0.6, 0.2],
+              }}
+              transition={{
+                duration: 6 + i,
+                repeat: Infinity,
+                delay: i * 0.8,
+              }}
+              style={{
+                left: `${5 + i * 12}%`,
+                top: `${10 + i * 8}%`,
+              }}
+            />
+          ))}
         </div>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.8 }}
+        className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8"
       >
         {[
-          { icon: Camera, title: 'Capture Your Mood', desc: 'Upload any photo or selfie' },
-          { icon: Upload, title: 'AI Analysis', desc: 'Our AI reads your facial expressions' },
-          { icon: Video, title: 'Perfect Playlist', desc: 'Get music that matches your vibe' }
+          { 
+            icon: Camera, 
+            title: 'Capture Your Mood', 
+            desc: 'Upload any photo or selfie to start',
+            gradient: 'from-blue-500 to-purple-600'
+          },
+          { 
+            icon: Zap, 
+            title: 'AI Analysis', 
+            desc: 'Our AI reads your facial expressions',
+            gradient: 'from-purple-500 to-pink-600'
+          },
+          { 
+            icon: Music, 
+            title: 'Perfect Playlist', 
+            desc: 'Get music that matches your vibe',
+            gradient: 'from-pink-500 to-red-600'
+          }
         ].map((step, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 + index * 0.1 }}
-            className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10"
+            transition={{ delay: 0.8 + index * 0.1 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="text-center p-8 glass-card rounded-3xl border border-white/20 group hover:border-purple-400/50 transition-all duration-300"
           >
-            <div className="inline-block p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg mb-4">
-              <step.icon className="w-6 h-6 text-purple-400" />
-            </div>
-            <h4 className="font-semibold text-white mb-2">{step.title}</h4>
-            <p className="text-sm text-gray-400">{step.desc}</p>
+            <motion.div 
+              className={`inline-block p-4 bg-gradient-to-r ${step.gradient} rounded-2xl mb-6 group-hover:shadow-lg transition-shadow`}
+              whileHover={{ rotate: 5, scale: 1.1 }}
+            >
+              <step.icon className="w-8 h-8 text-white" />
+            </motion.div>
+            <h4 className="font-bold text-xl text-white mb-3 group-hover:text-purple-300 transition-colors">{step.title}</h4>
+            <p className="text-purple-200 leading-relaxed">{step.desc}</p>
           </motion.div>
         ))}
       </motion.div>

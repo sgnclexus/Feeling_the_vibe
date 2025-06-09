@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,12 +8,96 @@
     border-color: theme('colors.white / 10%');
   }
   
+  html {
+    scroll-behavior: smooth;
+  }
+  
   body {
-    @apply bg-slate-900 text-white;
+    @apply bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white font-body;
+    background-attachment: fixed;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-800/50;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gradient-to-b from-purple-500 to-pink-500 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply from-purple-400 to-pink-400;
   }
 }
 
 @layer components {
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl;
+  }
+  
+  .glass-card-strong {
+    @apply bg-white/20 backdrop-blur-2xl border border-white/30 shadow-2xl;
+  }
+  
+  .mood-card {
+    @apply relative overflow-hidden rounded-3xl p-8 transition-all duration-500;
+  }
+  
+  .mood-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-20 transition-opacity duration-500;
+    background: inherit;
+  }
+  
+  .mood-card:hover::before {
+    @apply opacity-30;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent;
+  }
+  
+  .gradient-border {
+    @apply relative;
+  }
+  
+  .gradient-border::before {
+    content: '';
+    @apply absolute inset-0 rounded-inherit p-[2px] bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+  
+  .floating-element {
+    @apply animate-float;
+  }
+  
+  .glow-effect {
+    @apply shadow-2xl;
+    filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.3));
+  }
+  
+  .music-wave {
+    @apply relative overflow-hidden;
+  }
+  
+  .music-wave::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent;
+    transform: translateX(-100%);
+    animation: wave 2s infinite;
+  }
+  
+  @keyframes wave {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgb(168 85 247 / 0.5) transparent;
@@ -27,12 +112,11 @@
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgb(168 85 247 / 0.5);
-    border-radius: 3px;
+    @apply bg-gradient-to-b from-purple-500 to-pink-500 rounded-full;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgb(168 85 247 / 0.7);
+    @apply from-purple-400 to-pink-400;
   }
 
   .line-clamp-2 {
@@ -48,6 +132,31 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  
+  /* Mood-specific backgrounds */
+  .mood-happy {
+    @apply bg-mood-happy;
+  }
+  
+  .mood-sad {
+    @apply bg-mood-sad;
+  }
+  
+  .mood-angry {
+    @apply bg-mood-angry;
+  }
+  
+  .mood-calm {
+    @apply bg-mood-calm;
+  }
+  
+  .mood-excited {
+    @apply bg-mood-excited;
+  }
+  
+  .mood-neutral {
+    @apply bg-mood-neutral;
+  }
 }
 
 @layer utilities {
@@ -55,7 +164,15 @@
     text-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
   }
   
-  .backdrop-blur-lg {
-    backdrop-filter: blur(16px);
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgb(0 0 0 / 0.5);
+  }
+  
+  .backdrop-blur-xs {
+    backdrop-filter: blur(2px);
+  }
+  
+  .backdrop-blur-4xl {
+    backdrop-filter: blur(64px);
   }
 }

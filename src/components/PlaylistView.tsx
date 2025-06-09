@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Music, Play, RefreshCw, Share2, Download, Heart, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Music, Play, RefreshCw, Share2, Download, Heart, ExternalLink, Sparkles, Volume2, Pause } from 'lucide-react';
 import { AnalysisResult } from '../types';
 import toast from 'react-hot-toast';
 
@@ -14,14 +14,64 @@ const PlaylistView: React.FC<PlaylistViewProps> = ({ result, onBack, onStartOver
   const [likedSongs, setLikedSongs] = useState<Set<number>>(new Set());
   const [currentPlaying, setCurrentPlaying] = useState<number | null>(null);
 
+  const getMoodTheme = (mood: string) => {
+    const themes = {
+      happy: {
+        gradient: 'from-yellow-400 via-orange-500 to-red-500',
+        bg: 'bg-mood-happy',
+        accent: 'text-yellow-300'
+      },
+      sad: {
+        gradient: 'from-blue-400 via-blue-600 to-indigo-700',
+        bg: 'bg-mood-sad',
+        accent: 'text-blue-300'
+      },
+      angry: {
+        gradient: 'from-red-400 via-red-600 to-red-800',
+        bg: 'bg-mood-angry',
+        accent: 'text-red-300'
+      },
+      calm: {
+        gradient: 'from-green-400 via-teal-500 to-blue-500',
+        bg: 'bg-mood-calm',
+        accent: 'text-green-300'
+      },
+      excited: {
+        gradient: 'from-purple-400 via-pink-500 to-purple-600',
+        bg: 'bg-mood-excited',
+        accent: 'text-purple-300'
+      },
+      neutral: {
+        gradient: 'from-gray-400 via-gray-600 to-gray-800',
+        bg: 'bg-mood-neutral',
+        accent: 'text-gray-300'
+      }
+    };
+    return themes[mood as keyof typeof themes] || themes.neutral;
+  };
+
+  const moodTheme = getMoodTheme(result.moodCategory);
+
   const toggleLike = (index: number) => {
     const newLiked = new Set(likedSongs);
     if (newLiked.has(index)) {
       newLiked.delete(index);
-      toast.success('Removed from favorites');
+      toast.success('💔 Removed from favorites', {
+        style: {
+          background: 'linear-gradient(135deg, #6b7280 0%, #374151 100%)',
+          color: 'white',
+          border: 'none',
+        },
+      });
     } else {
       newLiked.add(index);
-      toast.success('Added to favorites');
+      toast.success('💖 Added to favorites!', {
+        style: {
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          color: 'white',
+          border: 'none',
+        },
+      });
     }
     setLikedSongs(newLiked);
   };
@@ -37,7 +87,13 @@ const PlaylistView: React.FC<PlaylistViewProps> = ({ result, onBack, onStartOver
         });
       } else {
         await navigator.clipboard.writeText(playlistText);
-        toast.success('Playlist copied to clipboard!');
+        toast.success('📋 Playlist copied to clipboard!', {
+          style: {
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: 'white',
+            border: 'none',
+          },
+        });
       }
     } catch (error) {
       toast.error('Failed to share playlist');
@@ -59,7 +115,13 @@ const PlaylistView: React.FC<PlaylistViewProps> = ({ result, onBack, onStartOver
     a.download = `vibe-playlist-${result.moodCategory}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Playlist exported!');
+    toast.success('📁 Playlist exported!', {
+      style: {
+        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+        color: 'white',
+        border: 'none',
+      },
+    });
   };
 
   const searchSpotify = (song: string, artist: string) => {
@@ -67,130 +129,200 @@ const PlaylistView: React.FC<PlaylistViewProps> = ({ result, onBack, onStartOver
     window.open(`https://open.spotify.com/search/${query}`, '_blank');
   };
 
+  const togglePlay = (index: number) => {
+    setCurrentPlaying(currentPlaying === index ? null : index);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden"
+        transition={{ duration: 0.8 }}
+        className="glass-card-strong rounded-4xl border border-white/30 overflow-hidden relative"
       >
+        {/* Animated background */}
+        <div className={`absolute inset-0 ${moodTheme.bg} opacity-10`} />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-purple-600/10 animate-gradient-xy" />
+
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-6 border-b border-white/10">
-          <div className="flex items-center justify-between mb-4">
+        <div className="relative z-10 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-purple-600/30 p-8 border-b border-white/20">
+          <div className="flex items-center justify-between mb-6">
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, x: -5 }}
               whileTap={{ scale: 0.95 }}
               onClick={onBack}
-              className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+              className="flex items-center space-x-3 text-purple-200 hover:text-white transition-colors font-semibold"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-6 h-6" />
               <span>Back to Analysis</span>
             </motion.button>
 
-            <div className="flex space-x-2">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleShare}
-                className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-              >
-                <Share2 className="w-5 h-5 text-gray-300" />
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleExportPlaylist}
-                className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-              >
-                <Download className="w-5 h-5 text-gray-300" />
-              </motion.button>
+            <div className="flex space-x-3">
+              {[
+                { icon: Share2, action: handleShare, color: 'from-blue-500 to-purple-600' },
+                { icon: Download, action: handleExportPlaylist, color: 'from-green-500 to-teal-600' }
+              ].map((btn, i) => (
+                <motion.button
+                  key={i}
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={btn.action}
+                  className={`p-3 bg-gradient-to-r ${btn.color} rounded-xl hover:shadow-lg transition-all duration-300`}
+                >
+                  <btn.icon className="w-5 h-5 text-white" />
+                </motion.button>
+              ))}
             </div>
           </div>
 
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white mb-2">Your Vibe Playlist</h2>
-            <p className="text-lg text-purple-300 capitalize font-semibold">{result.moodCategory}</p>
-            <p className="text-gray-300 mt-3 max-w-2xl mx-auto">{result.vibe}</p>
+            <motion.h2 
+              className="text-5xl font-bold gradient-text mb-4"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              Your Vibe Playlist
+            </motion.h2>
+            <motion.p 
+              className={`text-2xl font-bold capitalize mb-4 ${moodTheme.accent}`}
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {result.moodCategory} Vibes
+            </motion.p>
+            <motion.p 
+              className="text-lg text-purple-100 max-w-3xl mx-auto leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {result.vibe}
+            </motion.p>
           </div>
 
-          <div className="flex justify-center mt-6">
-            <div className="flex items-center space-x-6 text-sm text-gray-400">
-              <span>{result.playlist.length} songs</span>
-              <span>•</span>
-              <span>AI curated</span>
-              <span>•</span>
-              <span>Personalized for you</span>
+          <motion.div 
+            className="flex justify-center mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="flex items-center space-x-8 text-sm text-purple-200">
+              <div className="flex items-center space-x-2">
+                <Music className="w-4 h-4" />
+                <span className="font-semibold">{result.playlist.length} songs</span>
+              </div>
+              <div className="w-1 h-1 bg-purple-400 rounded-full" />
+              <span className="font-semibold">AI curated</span>
+              <div className="w-1 h-1 bg-purple-400 rounded-full" />
+              <span className="font-semibold">Personalized for you</span>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Playlist */}
-        <div className="p-6">
-          <div className="space-y-3">
+        <div className="relative z-10 p-8">
+          <div className="space-y-4">
             <AnimatePresence>
               {result.playlist.map((song, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`group relative bg-white/5 hover:bg-white/10 rounded-xl p-4 border border-white/10 hover:border-purple-500/30 transition-all cursor-pointer ${
-                    currentPlaying === index ? 'bg-purple-500/20 border-purple-500/50' : ''
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.02, x: 5 }}
+                  className={`group relative glass-card rounded-3xl p-6 border border-white/20 hover:border-purple-400/50 transition-all duration-300 cursor-pointer overflow-hidden ${
+                    currentPlaying === index ? 'bg-purple-500/20 border-purple-400/70 shadow-lg' : ''
                   }`}
-                  onClick={() => setCurrentPlaying(currentPlaying === index ? null : index)}
+                  onClick={() => togglePlay(index)}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  {/* Animated background for playing song */}
+                  {currentPlaying === index && (
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-purple-500/10"
+                      animate={{ x: ['-100%', '100%'] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  )}
+
+                  <div className="relative z-10 flex items-center space-x-6">
+                    <motion.div 
+                      className="flex-shrink-0"
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <div className={`w-16 h-16 bg-gradient-to-r ${moodTheme.gradient} rounded-2xl flex items-center justify-center shadow-lg`}>
                         {currentPlaying === index ? (
                           <motion.div
                             animate={{ scale: [1, 1.2, 1] }}
                             transition={{ repeat: Infinity, duration: 1 }}
                           >
-                            <Music className="w-5 h-5 text-white" />
+                            <Volume2 className="w-7 h-7 text-white" />
                           </motion.div>
                         ) : (
-                          <span className="text-white font-bold">{index + 1}</span>
+                          <span className="text-white font-bold text-lg">{index + 1}</span>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
 
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors">
+                      <motion.h4 
+                        className="font-bold text-xl text-white group-hover:text-purple-300 transition-colors mb-1"
+                        whileHover={{ scale: 1.02 }}
+                      >
                         {song.title}
-                      </h4>
-                      <p className="text-gray-400 text-sm">{song.artist}</p>
-                      <p className="text-gray-500 text-xs mt-1 line-clamp-2">{song.reason}</p>
+                      </motion.h4>
+                      <p className="text-purple-200 text-lg mb-2">{song.artist}</p>
+                      <p className="text-purple-300 text-sm line-clamp-2">{song.reason}</p>
                     </div>
 
-                    <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <motion.button
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleLike(index);
                         }}
-                        className={`p-2 rounded-lg transition-colors ${
+                        className={`p-3 rounded-xl transition-all duration-300 ${
                           likedSongs.has(index)
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-white/10 text-gray-400 hover:text-red-400'
+                            ? 'bg-red-500/30 text-red-400 shadow-lg'
+                            : 'bg-white/10 text-gray-400 hover:text-red-400 hover:bg-red-500/20'
                         }`}
                       >
-                        <Heart className={`w-4 h-4 ${likedSongs.has(index) ? 'fill-current' : ''}`} />
+                        <Heart className={`w-5 h-5 ${likedSongs.has(index) ? 'fill-current' : ''}`} />
                       </motion.button>
 
                       <motion.button
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           searchSpotify(song.title, song.artist);
                         }}
-                        className="p-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                        className="p-3 bg-green-500/30 text-green-400 rounded-xl hover:bg-green-500/40 transition-all duration-300 shadow-lg"
                       >
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="w-5 h-5" />
+                      </motion.button>
+
+                      <motion.button
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePlay(index);
+                        }}
+                        className={`p-3 rounded-xl transition-all duration-300 ${
+                          currentPlaying === index
+                            ? 'bg-purple-500/30 text-purple-400'
+                            : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                        }`}
+                      >
+                        {currentPlaying === index ? (
+                          <Pause className="w-5 h-5" />
+                        ) : (
+                          <Play className="w-5 h-5" />
+                        )}
                       </motion.button>
                     </div>
                   </div>
@@ -201,11 +333,17 @@ const PlaylistView: React.FC<PlaylistViewProps> = ({ result, onBack, onStartOver
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mt-4 pt-4 border-t border-white/10"
+                        transition={{ duration: 0.3 }}
+                        className="mt-6 pt-6 border-t border-white/20"
                       >
-                        <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-4">
-                          <h5 className="text-sm font-semibold text-purple-300 mb-2">Why this song matches your vibe:</h5>
-                          <p className="text-sm text-gray-300">{song.reason}</p>
+                        <div className="bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-purple-500/20 rounded-2xl p-6 border border-purple-400/30">
+                          <div className="flex items-start space-x-3">
+                            <Sparkles className="w-5 h-5 text-purple-300 mt-1 flex-shrink-0" />
+                            <div>
+                              <h5 className="text-lg font-bold text-purple-300 mb-2">Why this song matches your vibe:</h5>
+                              <p className="text-purple-100 leading-relaxed">{song.reason}</p>
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -215,17 +353,22 @@ const PlaylistView: React.FC<PlaylistViewProps> = ({ result, onBack, onStartOver
             </AnimatePresence>
           </div>
 
-          <div className="mt-8 text-center">
+          <motion.div 
+            className="mt-12 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -3 }}
               whileTap={{ scale: 0.95 }}
               onClick={onStartOver}
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-purple-500/25 transition-all"
+              className="inline-flex items-center space-x-3 px-10 py-5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white font-bold text-lg rounded-2xl shadow-2xl glow-effect hover:shadow-purple-500/50 transition-all duration-300"
             >
-              <RefreshCw className="w-5 h-5" />
-              <span>Analyze Another Mood</span>
+              <RefreshCw className="w-6 h-6" />
+              <span>Discover Another Vibe</span>
             </motion.button>
-          </div>
+          </motion.div>
         </div>
       </motion.div>
     </div>
