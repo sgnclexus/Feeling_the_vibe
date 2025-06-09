@@ -13,7 +13,8 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white font-body;
+    @apply bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white;
+    font-family: 'Inter', sans-serif;
     background-attachment: fixed;
   }
 
@@ -176,3 +177,4 @@
     backdrop-filter: blur(64px);
   }
 }
+</parameter>
