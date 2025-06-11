@@ -7,6 +7,9 @@ import { dirname } from 'path';
 import fs from 'fs';
 import OpenAI from 'openai';
 import Database from './database.js';
+// Ensure environment variables are loaded
+import dotenv from 'dotenv';
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

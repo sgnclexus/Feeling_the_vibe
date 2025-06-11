@@ -33,6 +33,8 @@ const RecentAnalyses: React.FC<RecentAnalysesProps> = ({ onSelectAnalysis }) => 
     }
   };
 
+  console.log('Recent analyses:', analyses);
+
   const handleSelectAnalysis = (analysis: StoredAnalysis) => {
     const result: AnalysisResult = {
       analysisId: analysis.id,
@@ -252,7 +254,7 @@ const RecentAnalyses: React.FC<RecentAnalysesProps> = ({ onSelectAnalysis }) => 
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-2">
                           <Music className="w-4 h-4" />
-                          <span className="font-semibold">{JSON.parse(analysis.playlist).length} songs</span>
+                          <span className="font-semibold">{analysis.playlist.length} songs</span>
                         </div>
                         <div className={`capitalize font-semibold ${moodTheme.color}`}>
                           {analysis.mood_category}
