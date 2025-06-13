@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, Heart, Sparkles, ArrowRight, Skip, Check, X } from 'lucide-react';
+import { Music, Heart, Sparkles, ArrowRight, SkipBack as Skip, Check, X } from 'lucide-react';
 import { MusicPreferences } from '../types';
 
 interface MusicPreferenceQuizProps {
