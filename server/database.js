@@ -23,6 +23,8 @@ class Database {
         vibe TEXT NOT NULL,
         mood_category TEXT NOT NULL,
         playlist TEXT NOT NULL,
+        color_analysis TEXT,
+        preferences TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -32,6 +34,17 @@ class Database {
         console.error('Error creating table:', err);
       } else {
         console.log('Database initialized successfully');
+        // Add new columns if they don't exist
+        this.addColumnIfNotExists('color_analysis', 'TEXT');
+        this.addColumnIfNotExists('preferences', 'TEXT');
+      }
+    });
+  }
+
+  addColumnIfNotExists(columnName, columnType) {
+    this.db.run(`ALTER TABLE analyses ADD COLUMN ${columnName} ${columnType}`, (err) => {
+      if (err && !err.message.includes('duplicate column name')) {
+        console.error(`Error adding column ${columnName}:`, err);
       }
     });
   }
@@ -39,8 +52,8 @@ class Database {
   saveAnalysis(data) {
     return new Promise((resolve, reject) => {
       const query = `
-        INSERT INTO analyses (filename, dominant_emotion, confidence, vibe, mood_category, playlist)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO analyses (filename, dominant_emotion, confidence, vibe, mood_category, playlist, color_analysis, preferences)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
       this.db.run(query, [
@@ -49,7 +62,9 @@ class Database {
         data.confidence,
         data.vibe,
         data.moodCategory,
-        data.playlist
+        data.playlist,
+        data.colorAnalysis || null,
+        data.preferences || null
       ], function(err) {
         if (err) {
           reject(err);

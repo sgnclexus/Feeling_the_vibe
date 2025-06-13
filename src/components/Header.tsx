@@ -1,15 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Music, Upload, BarChart3, History, Home, Sparkles } from 'lucide-react';
+import { Music, Upload, BarChart3, History, Home, Sparkles, Zap } from 'lucide-react';
 
 interface HeaderProps {
   currentView: string;
-  onNavigate: (view: 'upload' | 'analysis' | 'playlist' | 'recent') => void;
+  onNavigate: (view: 'quiz' | 'upload' | 'analysis' | 'playlist' | 'recent') => void;
   onViewRecent: () => void;
   onStartOver: () => void;
+  onQuickUpload?: () => void;
+  showQuickUpload?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onViewRecent, onStartOver }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  currentView, 
+  onNavigate, 
+  onViewRecent, 
+  onStartOver, 
+  onQuickUpload,
+  showQuickUpload = false 
+}) => {
   return (
     <motion.header 
       initial={{ y: -100, opacity: 0 }}
@@ -67,20 +76,32 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onViewRecent, 
               whileTap={{ scale: 0.95 }}
               onClick={onStartOver}
               className={`group relative flex items-center space-x-2 px-6 py-3 rounded-2xl font-semibold transition-all duration-300 ${
-                currentView === 'upload'
+                currentView === 'quiz'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg glow-effect'
                   : 'glass-card text-purple-200 hover:text-white hover:bg-white/20'
               }`}
             >
               <Home className="w-5 h-5" />
               <span className="hidden sm:inline">Home</span>
-              {currentView === 'upload' && (
+              {currentView === 'quiz' && (
                 <motion.div
                   layoutId="activeTab"
                   className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl -z-10"
                 />
               )}
             </motion.button>
+
+            {showQuickUpload && onQuickUpload && (
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onQuickUpload}
+                className="group relative flex items-center space-x-2 px-6 py-3 rounded-2xl font-semibold transition-all duration-300 glass-card text-purple-200 hover:text-white hover:bg-white/20 border border-purple-400/50"
+              >
+                <Zap className="w-5 h-5" />
+                <span className="hidden sm:inline">Quick Upload</span>
+              </motion.button>
+            )}
 
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}

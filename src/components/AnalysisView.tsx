@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, RefreshCw, TrendingUp, Music, Heart, Sparkles, Zap } from 'lucide-react';
+import { Play, RefreshCw, TrendingUp, Music, Heart, Sparkles, Zap, Palette } from 'lucide-react';
 import { AnalysisResult } from '../types';
+import ColorAnalysisView from './ColorAnalysisView';
 
 interface AnalysisViewProps {
   result: AnalysisResult;
@@ -207,6 +208,17 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
               </div>
             </div>
           </motion.div>
+
+          {/* Color Analysis */}
+          {result.colorAnalysis && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+            >
+              <ColorAnalysisView colorAnalysis={result.colorAnalysis} />
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Right Column - Vibe & Playlist */}
@@ -216,6 +228,46 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
           transition={{ delay: 0.3, duration: 0.8 }}
           className="space-y-8"
         >
+          {/* User Preferences Display */}
+          {result.preferences && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="glass-card-strong rounded-4xl p-8 border border-white/30 relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 via-teal-600/10 to-green-600/10" />
+              
+              <motion.h3 
+                className="text-2xl font-bold text-white mb-6 flex items-center relative z-10"
+                whileHover={{ scale: 1.02 }}
+              >
+                <Heart className="w-6 h-6 mr-3 text-green-400" />
+                Your Music DNA
+              </motion.h3>
+              
+              <div className="relative z-10 space-y-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">Favorite Genres</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {result.preferences.genres.map((genre, i) => (
+                      <span key={i} className="px-3 py-1 bg-green-500/30 text-green-200 rounded-full text-sm font-medium capitalize">
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">Energy Level</h4>
+                  <span className="px-4 py-2 bg-teal-500/30 text-teal-200 rounded-full font-medium capitalize">
+                    {result.preferences.energyLevel} Energy
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Vibe Description */}
           <motion.div
             className="glass-card-strong rounded-4xl p-8 border border-white/30 relative overflow-hidden"

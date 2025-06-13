@@ -2,19 +2,35 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
+import MusicPreferenceQuiz from './components/MusicPreferenceQuiz';
 import UploadZone from './components/UploadZone';
 import AnalysisView from './components/AnalysisView';
 import PlaylistView from './components/PlaylistView';
 import RecentAnalyses from './components/RecentAnalyses';
-import { AnalysisResult } from './types';
+import { AnalysisResult, MusicPreferences } from './types';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'upload' | 'analysis' | 'playlist' | 'recent'>('upload');
+  const [currentView, setCurrentView] = useState<'quiz' | 'upload' | 'analysis' | 'playlist' | 'recent'>('quiz');
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
+  const [userPreferences, setUserPreferences] = useState<MusicPreferences | null>(null);
+
+  const handlePreferencesComplete = (preferences: MusicPreferences) => {
+    setUserPreferences(preferences);
+    setCurrentView('upload');
+  };
+
+  const handleSkipPreferences = () => {
+    setCurrentView('upload');
+  };
 
   const handleAnalysisComplete = (result: AnalysisResult, fileUrl: string) => {
-    setAnalysisResult(result);
+    // Add user preferences to the result if available
+    const enhancedResult = {
+      ...result,
+      preferences: userPreferences
+    };
+    setAnalysisResult(enhancedResult);
     setUploadedFile(fileUrl);
     setCurrentView('analysis');
   };
@@ -24,13 +40,18 @@ function App() {
   };
 
   const handleStartOver = () => {
-    setCurrentView('upload');
+    setCurrentView('quiz');
     setAnalysisResult(null);
     setUploadedFile(null);
+    setUserPreferences(null);
   };
 
   const handleViewRecent = () => {
     setCurrentView('recent');
+  };
+
+  const handleQuickUpload = () => {
+    setCurrentView('upload');
   };
 
   return (
@@ -84,6 +105,8 @@ function App() {
         onNavigate={setCurrentView}
         onViewRecent={handleViewRecent}
         onStartOver={handleStartOver}
+        onQuickUpload={handleQuickUpload}
+        showQuickUpload={currentView === 'quiz'}
       />
 
       <main className="container mx-auto px-4 py-12 relative z-10">
@@ -95,8 +118,18 @@ function App() {
             exit={{ opacity: 0, y: -30, scale: 0.95 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
           >
+            {currentView === 'quiz' && (
+              <MusicPreferenceQuiz
+                onComplete={handlePreferencesComplete}
+                onSkip={handleSkipPreferences}
+              />
+            )}
+
             {currentView === 'upload' && (
-              <UploadZone onAnalysisComplete={handleAnalysisComplete} />
+              <UploadZone 
+                onAnalysisComplete={handleAnalysisComplete}
+                userPreferences={userPreferences}
+              />
             )}
 
             {currentView === 'analysis' && analysisResult && (

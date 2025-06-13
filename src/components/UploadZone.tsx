@@ -1,21 +1,25 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Camera, Video, Loader2, Sparkles, Music, Heart, Zap } from 'lucide-react';
+import { Upload, Camera, Video, Loader2, Sparkles, Music, Heart, Zap, Palette } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { EmotionDetector } from '../services/emotionDetector';
-import { AnalysisResult } from '../types';
+import { ColorAnalyzer } from '../services/colorAnalyzer';
+import { AnalysisResult, MusicPreferences } from '../types';
 
 interface UploadZoneProps {
   onAnalysisComplete: (result: AnalysisResult, fileUrl: string) => void;
+  userPreferences?: MusicPreferences | null;
 }
 
-const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
+const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPreferences }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [analysisStep, setAnalysisStep] = useState('');
 
   const emotionDetector = new EmotionDetector();
+  const colorAnalyzer = new ColorAnalyzer();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -50,7 +54,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      toast.success('✨ File uploaded! Reading your emotions...', {
+      toast.success('✨ File uploaded! Analyzing your vibe...', {
         style: {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           color: 'white',
@@ -58,15 +62,25 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
         },
       });
 
-      // Analyze emotions
+      // Step 1: Emotion Analysis
+      setAnalysisStep('Detecting emotions from your expression...');
       const emotions = await emotionDetector.detectEmotions(file);
       
-      // Send emotions to backend for analysis
+      // Step 2: Color Analysis
+      setAnalysisStep('Analyzing visual colors and mood...');
+      const colorAnalysis = await colorAnalyzer.analyzeImage(file);
+      
+      // Step 3: Generate enhanced playlist
+      setAnalysisStep('Creating your personalized playlist...');
+      
+      // Send comprehensive analysis to backend
       const analysisResponse = await fetch('http://localhost:3001/api/analyze-mood', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           emotions,
+          colorAnalysis,
+          preferences: userPreferences,
           filename: uploadResult.file.filename
         }),
       });
@@ -76,22 +90,32 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
       }
 
       const analysisResult = await analysisResponse.json();
+      
+      // Add color analysis to result
+      const enhancedResult = {
+        ...analysisResult,
+        colorAnalysis,
+        preferences: userPreferences
+      };
+      
       setIsAnalyzing(false);
       
-      toast.success('🎵 Your vibe playlist is ready!', {
+      toast.success('🎵 Your personalized vibe playlist is ready!', {
         style: {
           background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
           color: 'white',
           border: 'none',
         },
       });
-      onAnalysisComplete(analysisResult, `http://localhost:3001${uploadResult.file.path}`);
+      
+      onAnalysisComplete(enhancedResult, `http://localhost:3001${uploadResult.file.path}`);
 
     } catch (error) {
       console.error('Error:', error);
       setIsUploading(false);
       setIsAnalyzing(false);
       setUploadProgress(0);
+      setAnalysisStep('');
       toast.error('Oops! Something went wrong. Please try again.', {
         style: {
           background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
@@ -100,7 +124,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
         },
       });
     }
-  }, [emotionDetector, onAnalysisComplete]);
+  }, [emotionDetector, colorAnalyzer, onAnalysisComplete, userPreferences]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -143,7 +167,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              {isUploading ? '🚀 Uploading your vibe...' : '🧠 Reading your emotions...'}
+              {isUploading ? '🚀 Uploading your vibe...' : '🧠 Analyzing your essence...'}
             </motion.h3>
             
             {isUploading && (
@@ -165,21 +189,33 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
                 </motion.p>
               </div>
             )}
+
+            {isAnalyzing && analysisStep && (
+              <motion.p 
+                className="text-xl text-purple-100 max-w-lg mx-auto leading-relaxed mb-6"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                {analysisStep}
+              </motion.p>
+            )}
             
             <motion.p 
-              className="text-xl text-purple-100 max-w-lg mx-auto leading-relaxed"
+              className="text-lg text-purple-200 max-w-lg mx-auto leading-relaxed"
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
               {isUploading 
-                ? 'Preparing your media for emotional analysis...' 
-                : 'Our AI is diving deep into your emotions and curating the perfect soundtrack for your soul...'
+                ? 'Preparing your media for deep emotional and visual analysis...' 
+                : userPreferences 
+                  ? 'Our AI is combining your preferences with emotional cues and color psychology to craft the perfect soundtrack for your soul...'
+                  : 'Our AI is diving deep into your emotions and visual aesthetics to curate the perfect soundtrack for your soul...'
               }
             </motion.p>
 
-            {/* Floating icons */}
+            {/* Enhanced floating icons */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[Music, Heart, Sparkles, Zap].map((Icon, i) => (
+              {[Music, Heart, Sparkles, Zap, Palette].map((Icon, i) => (
                 <motion.div
                   key={i}
                   className="absolute"
@@ -195,8 +231,8 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
                     delay: i * 0.5,
                   }}
                   style={{
-                    left: `${15 + i * 20}%`,
-                    top: `${20 + i * 15}%`,
+                    left: `${10 + i * 18}%`,
+                    top: `${20 + i * 12}%`,
                   }}
                 >
                   <Icon className="w-6 h-6 text-purple-300" />
@@ -224,7 +260,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
           }}
           transition={{ duration: 5, repeat: Infinity }}
         >
-          What's Your Vibe Today?
+          {userPreferences ? 'Now Share Your Vibe!' : 'What\'s Your Vibe Today?'}
         </motion.h2>
         <motion.p 
           className="text-2xl text-purple-100 max-w-3xl mx-auto leading-relaxed font-medium"
@@ -232,9 +268,38 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Upload a photo or video and let our AI analyze your emotions to create 
-          the perfect playlist that matches your current mood and energy.
+          {userPreferences 
+            ? 'Upload a photo or video and let our AI combine your music preferences with emotional analysis and color psychology to create your perfect personalized playlist.'
+            : 'Upload a photo or video and let our AI analyze your emotions and visual aesthetics to create the perfect playlist that matches your current mood and energy.'
+          }
         </motion.p>
+
+        {userPreferences && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8 p-6 glass-card rounded-3xl border border-purple-400/30 max-w-2xl mx-auto"
+          >
+            <div className="flex items-center justify-center space-x-4 mb-4">
+              <Sparkles className="w-6 h-6 text-yellow-400" />
+              <span className="text-lg font-bold text-white">Your Preferences Loaded</span>
+              <Sparkles className="w-6 h-6 text-yellow-400" />
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {userPreferences.genres.slice(0, 4).map((genre, i) => (
+                <span key={i} className="px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-sm font-medium">
+                  {genre}
+                </span>
+              ))}
+              {userPreferences.genres.length > 4 && (
+                <span className="px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-sm font-medium">
+                  +{userPreferences.genres.length - 4} more
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
       </motion.div>
 
       <motion.div
@@ -312,7 +377,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
             }}
           >
             {isDragActive 
-              ? 'Release to upload your media and discover your vibe'
+              ? 'Release to upload your media and discover your personalized vibe'
               : 'Drag & drop your photo or video here, or click to browse'
             }
           </motion.p>
@@ -320,7 +385,8 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
           <div className="flex justify-center space-x-12 mb-10">
             {[
               { icon: Camera, label: 'Photos', color: 'from-blue-400 to-purple-500' },
-              { icon: Video, label: 'Videos', color: 'from-pink-400 to-red-500' }
+              { icon: Video, label: 'Videos', color: 'from-pink-400 to-red-500' },
+              { icon: Palette, label: 'Color Analysis', color: 'from-green-400 to-teal-500' }
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -353,9 +419,9 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
           </motion.p>
         </div>
 
-        {/* Floating elements */}
+        {/* Enhanced floating elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(8)].map((_, i) => (
+          {[...Array(10)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-40"
@@ -371,7 +437,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
                 delay: i * 0.8,
               }}
               style={{
-                left: `${5 + i * 12}%`,
+                left: `${5 + i * 10}%`,
                 top: `${10 + i * 8}%`,
               }}
             />
@@ -383,7 +449,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.8 }}
-        className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8"
+        className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8"
       >
         {[
           { 
@@ -393,15 +459,21 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete }) => {
             gradient: 'from-blue-500 to-purple-600'
           },
           { 
+            icon: Palette, 
+            title: 'Color Psychology', 
+            desc: 'AI analyzes visual colors and aesthetics',
+            gradient: 'from-green-500 to-teal-600'
+          },
+          { 
             icon: Zap, 
-            title: 'AI Analysis', 
-            desc: 'Our AI reads your facial expressions',
+            title: 'Emotion Detection', 
+            desc: 'Advanced facial expression analysis',
             gradient: 'from-purple-500 to-pink-600'
           },
           { 
             icon: Music, 
             title: 'Perfect Playlist', 
-            desc: 'Get music that matches your vibe',
+            desc: 'Personalized music that matches your vibe',
             gradient: 'from-pink-500 to-red-600'
           }
         ].map((step, index) => (
