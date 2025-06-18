@@ -5,14 +5,15 @@ import { Upload, Camera, Video, Loader2, Sparkles, Music, Heart, Zap, Palette } 
 import toast from 'react-hot-toast';
 import { EmotionDetector } from '../services/emotionDetector';
 import { ColorAnalyzer } from '../services/colorAnalyzer';
-import { AnalysisResult, MusicPreferences } from '../types';
+import { AnalysisResult, MusicPreferences, MoodQuizData } from '../types';
 
 interface UploadZoneProps {
   onAnalysisComplete: (result: AnalysisResult, fileUrl: string) => void;
   userPreferences?: MusicPreferences | null;
+  moodQuizData?: MoodQuizData | null;
 }
 
-const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPreferences }) => {
+const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPreferences, moodQuizData }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -54,7 +55,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      toast.success('✨ File uploaded! Analyzing your vibe...', {
+      toast.success('✨ File uploaded! Analyzing your complete vibe profile...', {
         style: {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           color: 'white',
@@ -70,8 +71,8 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
       setAnalysisStep('Analyzing visual colors and mood...');
       const colorAnalysis = await colorAnalyzer.analyzeImage(file);
       
-      // Step 3: Generate enhanced playlist
-      setAnalysisStep('Creating your personalized playlist...');
+      // Step 3: Generate enhanced playlist with all context
+      setAnalysisStep('Creating your ultra-personalized playlist...');
       
       // Send comprehensive analysis to backend
       const analysisResponse = await fetch('http://localhost:3001/api/analyze-mood', {
@@ -81,6 +82,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
           emotions,
           colorAnalysis,
           preferences: userPreferences,
+          moodQuizData: moodQuizData,
           filename: uploadResult.file.filename
         }),
       });
@@ -91,16 +93,17 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
 
       const analysisResult = await analysisResponse.json();
       
-      // Add color analysis to result
+      // Add all context to result
       const enhancedResult = {
         ...analysisResult,
         colorAnalysis,
-        preferences: userPreferences
+        preferences: userPreferences,
+        moodQuizData: moodQuizData
       };
       
       setIsAnalyzing(false);
       
-      toast.success('🎵 Your personalized vibe playlist is ready!', {
+      toast.success('🎵 Your ultra-personalized vibe playlist is ready!', {
         style: {
           background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
           color: 'white',
@@ -124,7 +127,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
         },
       });
     }
-  }, [emotionDetector, colorAnalyzer, onAnalysisComplete, userPreferences]);
+  }, [emotionDetector, colorAnalyzer, onAnalysisComplete, userPreferences, moodQuizData]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -167,7 +170,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              {isUploading ? '🚀 Uploading your vibe...' : '🧠 Analyzing your essence...'}
+              {isUploading ? '🚀 Uploading your vibe...' : '🧠 Creating your perfect playlist...'}
             </motion.h3>
             
             {isUploading && (
@@ -206,10 +209,12 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
               transition={{ duration: 3, repeat: Infinity }}
             >
               {isUploading 
-                ? 'Preparing your media for deep emotional and visual analysis...' 
-                : userPreferences 
-                  ? 'Our AI is combining your preferences with emotional cues and color psychology to craft the perfect soundtrack for your soul...'
-                  : 'Our AI is diving deep into your emotions and visual aesthetics to curate the perfect soundtrack for your soul...'
+                ? 'Preparing your media for comprehensive analysis...' 
+                : moodQuizData && userPreferences
+                  ? 'Our AI is combining your color psychology, mood words, music preferences, facial emotions, and visual aesthetics to create the ultimate personalized soundtrack...'
+                  : userPreferences 
+                    ? 'Our AI is combining your preferences with emotional cues and color psychology to craft the perfect soundtrack for your soul...'
+                    : 'Our AI is diving deep into your emotions and visual aesthetics to curate the perfect soundtrack for your soul...'
               }
             </motion.p>
 
@@ -260,7 +265,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
           }}
           transition={{ duration: 5, repeat: Infinity }}
         >
-          {userPreferences ? 'Now Share Your Vibe!' : 'What\'s Your Vibe Today?'}
+          {userPreferences || moodQuizData ? 'Now Share Your Moment!' : 'What\'s Your Vibe Today?'}
         </motion.h2>
         <motion.p 
           className="text-2xl text-purple-100 max-w-3xl mx-auto leading-relaxed font-medium"
@@ -268,36 +273,69 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          {userPreferences 
-            ? 'Upload a photo or video and let our AI combine your music preferences with emotional analysis and color psychology to create your perfect personalized playlist.'
-            : 'Upload a photo or video and let our AI analyze your emotions and visual aesthetics to create the perfect playlist that matches your current mood and energy.'
+          {moodQuizData && userPreferences 
+            ? 'Upload a photo or video and let our AI combine your color psychology insights, mood profile, and music preferences with real-time emotion detection to create your ultimate personalized playlist.'
+            : userPreferences 
+              ? 'Upload a photo or video and let our AI combine your music preferences with emotional analysis and color psychology to create your perfect personalized playlist.'
+              : 'Upload a photo or video and let our AI analyze your emotions and visual aesthetics to create the perfect playlist that matches your current mood and energy.'
           }
         </motion.p>
 
-        {userPreferences && (
+        {/* Enhanced context display */}
+        {(userPreferences || moodQuizData) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 p-6 glass-card rounded-3xl border border-purple-400/30 max-w-2xl mx-auto"
+            className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto"
           >
-            <div className="flex items-center justify-center space-x-4 mb-4">
-              <Sparkles className="w-6 h-6 text-yellow-400" />
-              <span className="text-lg font-bold text-white">Your Preferences Loaded</span>
-              <Sparkles className="w-6 h-6 text-yellow-400" />
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {userPreferences.genres.slice(0, 4).map((genre, i) => (
-                <span key={i} className="px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-sm font-medium">
-                  {genre}
-                </span>
-              ))}
-              {userPreferences.genres.length > 4 && (
-                <span className="px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-sm font-medium">
-                  +{userPreferences.genres.length - 4} more
-                </span>
-              )}
-            </div>
+            {moodQuizData && (
+              <div className="p-6 glass-card rounded-3xl border border-purple-400/30">
+                <div className="flex items-center justify-center space-x-4 mb-4">
+                  <Palette className="w-6 h-6 text-purple-400" />
+                  <span className="text-lg font-bold text-white">Mood Profile Loaded</span>
+                </div>
+                <div className="space-y-3">
+                  {moodQuizData.colorPsychology && (
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: moodQuizData.colorPsychology.hex }}
+                      />
+                      <span className="text-purple-200 text-sm">{moodQuizData.colorPsychology.name}</span>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {moodQuizData.moodWords.slice(0, 3).map((word, i) => (
+                      <span key={i} className="px-2 py-1 bg-purple-500/30 text-purple-200 rounded-full text-xs">
+                        {word}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {userPreferences && (
+              <div className="p-6 glass-card rounded-3xl border border-green-400/30">
+                <div className="flex items-center justify-center space-x-4 mb-4">
+                  <Music className="w-6 h-6 text-green-400" />
+                  <span className="text-lg font-bold text-white">Music Preferences Loaded</span>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {userPreferences.genres.slice(0, 4).map((genre, i) => (
+                    <span key={i} className="px-3 py-1 bg-green-500/30 text-green-200 rounded-full text-sm font-medium">
+                      {genre}
+                    </span>
+                  ))}
+                  {userPreferences.genres.length > 4 && (
+                    <span className="px-3 py-1 bg-green-500/30 text-green-200 rounded-full text-sm font-medium">
+                      +{userPreferences.genres.length - 4} more
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </motion.div>
@@ -366,7 +404,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
               color: isDragActive ? '#f0abfc' : '#ffffff'
             }}
           >
-            {isDragActive ? 'Drop it like it\'s hot! 🔥' : 'Ready to feel the vibe? ✨'}
+            {isDragActive ? 'Drop it like it\'s hot! 🔥' : 'Ready to complete your vibe profile? ✨'}
           </motion.h3>
           
           <motion.p 
@@ -377,7 +415,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
             }}
           >
             {isDragActive 
-              ? 'Release to upload your media and discover your personalized vibe'
+              ? 'Release to upload and discover your ultimate personalized playlist'
               : 'Drag & drop your photo or video here, or click to browse'
             }
           </motion.p>
@@ -386,7 +424,8 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
             {[
               { icon: Camera, label: 'Photos', color: 'from-blue-400 to-purple-500' },
               { icon: Video, label: 'Videos', color: 'from-pink-400 to-red-500' },
-              { icon: Palette, label: 'Color Analysis', color: 'from-green-400 to-teal-500' }
+              { icon: Palette, label: 'Color Analysis', color: 'from-green-400 to-teal-500' },
+              { icon: Heart, label: 'Emotion AI', color: 'from-purple-400 to-pink-500' }
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -453,28 +492,28 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
       >
         {[
           { 
-            icon: Camera, 
-            title: 'Capture Your Mood', 
-            desc: 'Upload any photo or selfie to start',
-            gradient: 'from-blue-500 to-purple-600'
-          },
-          { 
             icon: Palette, 
             title: 'Color Psychology', 
-            desc: 'AI analyzes visual colors and aesthetics',
-            gradient: 'from-green-500 to-teal-600'
-          },
-          { 
-            icon: Zap, 
-            title: 'Emotion Detection', 
-            desc: 'Advanced facial expression analysis',
+            desc: 'Deep color mood analysis and psychology',
             gradient: 'from-purple-500 to-pink-600'
           },
           { 
-            icon: Music, 
-            title: 'Perfect Playlist', 
-            desc: 'Personalized music that matches your vibe',
+            icon: Heart, 
+            title: 'Emotion Detection', 
+            desc: 'Advanced facial expression analysis',
             gradient: 'from-pink-500 to-red-600'
+          },
+          { 
+            icon: Music, 
+            title: 'Personal Preferences', 
+            desc: 'Your unique music taste profile',
+            gradient: 'from-green-500 to-teal-600'
+          },
+          { 
+            icon: Sparkles, 
+            title: 'AI Curation', 
+            desc: 'Perfect playlist matching your complete vibe',
+            gradient: 'from-blue-500 to-purple-600'
           }
         ].map((step, index) => (
           <motion.div

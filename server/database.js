@@ -25,6 +25,7 @@ class Database {
         playlist TEXT NOT NULL,
         color_analysis TEXT,
         preferences TEXT,
+        mood_quiz_data TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -37,6 +38,7 @@ class Database {
         // Add new columns if they don't exist
         this.addColumnIfNotExists('color_analysis', 'TEXT');
         this.addColumnIfNotExists('preferences', 'TEXT');
+        this.addColumnIfNotExists('mood_quiz_data', 'TEXT');
       }
     });
   }
@@ -52,8 +54,8 @@ class Database {
   saveAnalysis(data) {
     return new Promise((resolve, reject) => {
       const query = `
-        INSERT INTO analyses (filename, dominant_emotion, confidence, vibe, mood_category, playlist, color_analysis, preferences)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO analyses (filename, dominant_emotion, confidence, vibe, mood_category, playlist, color_analysis, preferences, mood_quiz_data)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
       this.db.run(query, [
@@ -64,7 +66,8 @@ class Database {
         data.moodCategory,
         data.playlist,
         data.colorAnalysis || null,
-        data.preferences || null
+        data.preferences || null,
+        data.moodQuizData || null
       ], function(err) {
         if (err) {
           reject(err);

@@ -2,18 +2,29 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
+import MoodColorQuiz from './components/MoodColorQuiz';
 import MusicPreferenceQuiz from './components/MusicPreferenceQuiz';
 import UploadZone from './components/UploadZone';
 import AnalysisView from './components/AnalysisView';
 import PlaylistView from './components/PlaylistView';
 import RecentAnalyses from './components/RecentAnalyses';
-import { AnalysisResult, MusicPreferences } from './types';
+import { AnalysisResult, MusicPreferences, MoodQuizData } from './types';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'quiz' | 'upload' | 'analysis' | 'playlist' | 'recent'>('quiz');
+  const [currentView, setCurrentView] = useState<'mood-quiz' | 'music-quiz' | 'upload' | 'analysis' | 'playlist' | 'recent'>('mood-quiz');
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [userPreferences, setUserPreferences] = useState<MusicPreferences | null>(null);
+  const [moodQuizData, setMoodQuizData] = useState<MoodQuizData | null>(null);
+
+  const handleMoodQuizComplete = (data: MoodQuizData) => {
+    setMoodQuizData(data);
+    setCurrentView('music-quiz');
+  };
+
+  const handleMoodQuizSkip = () => {
+    setCurrentView('music-quiz');
+  };
 
   const handlePreferencesComplete = (preferences: MusicPreferences) => {
     setUserPreferences(preferences);
@@ -25,10 +36,11 @@ function App() {
   };
 
   const handleAnalysisComplete = (result: AnalysisResult, fileUrl: string) => {
-    // Add user preferences to the result if available
+    // Add user preferences and mood quiz data to the result if available
     const enhancedResult = {
       ...result,
-      preferences: userPreferences
+      preferences: userPreferences,
+      moodQuizData: moodQuizData
     };
     setAnalysisResult(enhancedResult);
     setUploadedFile(fileUrl);
@@ -40,10 +52,11 @@ function App() {
   };
 
   const handleStartOver = () => {
-    setCurrentView('quiz');
+    setCurrentView('mood-quiz');
     setAnalysisResult(null);
     setUploadedFile(null);
     setUserPreferences(null);
+    setMoodQuizData(null);
   };
 
   const handleViewRecent = () => {
@@ -106,7 +119,7 @@ function App() {
         onViewRecent={handleViewRecent}
         onStartOver={handleStartOver}
         onQuickUpload={handleQuickUpload}
-        showQuickUpload={currentView === 'quiz'}
+        showQuickUpload={currentView === 'mood-quiz'}
       />
 
       <main className="container mx-auto px-4 py-12 relative z-10">
@@ -118,7 +131,14 @@ function App() {
             exit={{ opacity: 0, y: -30, scale: 0.95 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
           >
-            {currentView === 'quiz' && (
+            {currentView === 'mood-quiz' && (
+              <MoodColorQuiz
+                onComplete={handleMoodQuizComplete}
+                onSkip={handleMoodQuizSkip}
+              />
+            )}
+
+            {currentView === 'music-quiz' && (
               <MusicPreferenceQuiz
                 onComplete={handlePreferencesComplete}
                 onSkip={handleSkipPreferences}
@@ -129,6 +149,7 @@ function App() {
               <UploadZone 
                 onAnalysisComplete={handleAnalysisComplete}
                 userPreferences={userPreferences}
+                moodQuizData={moodQuizData}
               />
             )}
 

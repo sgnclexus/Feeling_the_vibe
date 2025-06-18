@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, RefreshCw, TrendingUp, Music, Heart, Sparkles, Zap, Palette } from 'lucide-react';
+import { Play, RefreshCw, TrendingUp, Music, Heart, Sparkles, Zap, Palette, Activity } from 'lucide-react';
 import { AnalysisResult } from '../types';
 import ColorAnalysisView from './ColorAnalysisView';
 
@@ -228,6 +228,67 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
           transition={{ delay: 0.3, duration: 0.8 }}
           className="space-y-8"
         >
+          {/* Mood Quiz Data Display */}
+          {result.moodQuizData && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="glass-card-strong rounded-4xl p-8 border border-white/30 relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-purple-600/10" />
+              
+              <motion.h3 
+                className="text-2xl font-bold text-white mb-6 flex items-center relative z-10"
+                whileHover={{ scale: 1.02 }}
+              >
+                <Palette className="w-6 h-6 mr-3 text-purple-400" />
+                Your Mood Profile
+              </motion.h3>
+              
+              <div className="relative z-10 space-y-6">
+                {result.moodQuizData.colorPsychology && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-3">Selected Color Vibe</h4>
+                    <div className="flex items-center space-x-4 p-4 bg-white/10 rounded-2xl">
+                      <div 
+                        className="w-12 h-12 rounded-xl shadow-lg"
+                        style={{ backgroundColor: result.moodQuizData.colorPsychology.hex }}
+                      />
+                      <div>
+                        <div className="text-white font-semibold">{result.moodQuizData.colorPsychology.name}</div>
+                        <div className="text-purple-200 text-sm">{result.moodQuizData.colorPsychology.mood}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">Mood Words</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {result.moodQuizData.moodWords.map((word, i) => (
+                      <span key={i} className="px-3 py-1 bg-purple-500/30 text-purple-200 rounded-full text-sm font-medium capitalize">
+                        {word}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {result.moodQuizData.activity && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-3">Current Activity</h4>
+                    <div className="flex items-center space-x-3">
+                      <Activity className="w-5 h-5 text-cyan-400" />
+                      <span className="px-4 py-2 bg-cyan-500/30 text-cyan-200 rounded-full font-medium capitalize">
+                        {result.moodQuizData.activity}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {/* User Preferences Display */}
           {result.preferences && (
             <motion.div
@@ -280,7 +341,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({
               whileHover={{ scale: 1.02 }}
             >
               <Heart className="w-8 h-8 mr-3 text-pink-400" />
-              Your Vibe
+              Your Complete Vibe
             </motion.h3>
             
             <motion.div 

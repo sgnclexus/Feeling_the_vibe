@@ -7,6 +7,7 @@ export interface AnalysisResult {
   playlist: PlaylistItem[];
   colorAnalysis?: ColorAnalysis;
   preferences?: MusicPreferences;
+  moodQuizData?: MoodQuizData;
 }
 
 export interface PlaylistItem {
@@ -39,6 +40,7 @@ export interface StoredAnalysis {
   created_at: string;
   color_analysis?: string;
   preferences?: string;
+  mood_quiz_data?: string;
 }
 
 export interface MusicPreferences {
@@ -47,6 +49,19 @@ export interface MusicPreferences {
   platforms: string[];
   energyLevel: string;
   moodInfluence: string;
+}
+
+export interface MoodQuizData {
+  selectedColor: string;
+  moodWords: string[];
+  genres: string[];
+  activity: string;
+  colorPsychology: {
+    mood: string;
+    psychology: string;
+    hex: string;
+    name: string;
+  } | null;
 }
 
 export interface ColorData {
