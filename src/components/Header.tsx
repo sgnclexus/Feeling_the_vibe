@@ -4,7 +4,7 @@ import { Music, Upload, BarChart3, History, Home, Sparkles, Zap } from 'lucide-r
 
 interface HeaderProps {
   currentView: string;
-  onNavigate: (view: 'quiz' | 'upload' | 'analysis' | 'playlist' | 'recent') => void;
+  onNavigate: (view: 'mood-quiz' | 'music-quiz' | 'upload' | 'analysis' | 'playlist' | 'recent') => void;
   onViewRecent: () => void;
   onStartOver: () => void;
   onQuickUpload?: () => void;
@@ -76,14 +76,14 @@ const Header: React.FC<HeaderProps> = ({
               whileTap={{ scale: 0.95 }}
               onClick={onStartOver}
               className={`group relative flex items-center space-x-2 px-6 py-3 rounded-2xl font-semibold transition-all duration-300 ${
-                currentView === 'quiz'
+                currentView === 'mood-quiz'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg glow-effect'
                   : 'glass-card text-purple-200 hover:text-white hover:bg-white/20'
               }`}
             >
               <Home className="w-5 h-5" />
               <span className="hidden sm:inline">Home</span>
-              {currentView === 'quiz' && (
+              {currentView === 'mood-quiz' && (
                 <motion.div
                   layoutId="activeTab"
                   className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl -z-10"
