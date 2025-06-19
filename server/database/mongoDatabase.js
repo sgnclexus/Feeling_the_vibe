@@ -59,18 +59,29 @@ class MongoDatabase {
 
   async connect() {
     try {
-      const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/feeling-the-vibe';
+      const mongoUri = process.env.MONGODB_URI;
+      
+      if (!mongoUri) {
+        throw new Error('MONGODB_URI environment variable is not set');
+      }
+
+      console.log('🍃 Connecting to MongoDB...');
+      console.log(`🔗 URI: ${mongoUri.replace(/\/\/.*@/, '//***:***@')}`); // Hide credentials in logs
       
       await mongoose.connect(mongoUri, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000, // 5 second timeout
+        connectTimeoutMS: 10000, // 10 second timeout
       });
       
       this.connected = true;
       console.log('🍃 Connected to MongoDB successfully');
+      console.log(`📊 Database: ${mongoose.connection.db.databaseName}`);
+      console.log(`🔗 Host: ${mongoose.connection.host}:${mongoose.connection.port}`);
       return true;
     } catch (error) {
-      console.error('❌ MongoDB connection error:', error);
+      console.error('❌ MongoDB connection error:', error.message);
       this.connected = false;
       throw error;
     }
@@ -91,12 +102,26 @@ class MongoDatabase {
   // Analysis operations
   async saveAnalysis(analysisData) {
     try {
+      console.log('💾 Saving analysis to MongoDB:', {
+        filename: analysisData.filename,
+        emotion: analysisData.dominant_emotion,
+        confidence: analysisData.confidence
+      });
+
       const analysis = new this.Analysis({
-        ...analysisData,
+        filename: analysisData.filename,
+        dominant_emotion: analysisData.dominant_emotion,
+        confidence: analysisData.confidence,
+        vibe: analysisData.vibe,
+        mood_category: analysisData.mood_category,
         playlist: JSON.stringify(analysisData.playlist),
         color_analysis: analysisData.colorAnalysis ? JSON.stringify(analysisData.colorAnalysis) : null,
         preferences: analysisData.preferences ? JSON.stringify(analysisData.preferences) : null,
-        mood_quiz_data: analysisData.moodQuizData ? JSON.stringify(analysisData.moodQuizData) : null
+        mood_quiz_data: analysisData.moodQuizData ? JSON.stringify(analysisData.moodQuizData) : null,
+        file_url: analysisData.file_url,
+        file_size: analysisData.file_size,
+        file_type: analysisData.file_type,
+        user_id: analysisData.user_id
       });
       
       const savedAnalysis = await analysis.save();
@@ -110,8 +135,14 @@ class MongoDatabase {
 
   async getAnalysis(id) {
     try {
+      console.log(`🔍 Fetching analysis ${id} from MongoDB...`);
       const analysis = await this.Analysis.findById(id);
-      if (!analysis) return null;
+      if (!analysis) {
+        console.log(`❌ Analysis ${id} not found in MongoDB`);
+        return null;
+      }
+      
+      console.log(`✅ Found analysis ${id} in MongoDB`);
       
       // Convert to format expected by frontend
       return {
@@ -138,11 +169,14 @@ class MongoDatabase {
 
   async getRecentAnalyses(limit = 10) {
     try {
+      console.log(`📋 Fetching ${limit} recent analyses from MongoDB...`);
       const analyses = await this.Analysis
         .find()
         .sort({ created_at: -1 })
         .limit(limit)
         .lean();
+      
+      console.log(`✅ Found ${analyses.length} recent analyses in MongoDB`);
       
       return analyses.map(analysis => ({
         id: analysis._id.toString(),
@@ -166,6 +200,7 @@ class MongoDatabase {
 
   async searchAnalyses(filters = {}) {
     try {
+      console.log('🔍 Searching analyses in MongoDB with filters:', filters);
       const query = {};
       
       // Build query based on filters
@@ -217,6 +252,8 @@ class MongoDatabase {
         this.Analysis.countDocuments(query)
       ]);
       
+      console.log(`✅ Found ${analyses.length} analyses matching search criteria`);
+      
       return {
         analyses: analyses.map(analysis => ({
           id: analysis._id.toString(),
@@ -244,6 +281,7 @@ class MongoDatabase {
 
   async getAnalytics() {
     try {
+      console.log('📊 Fetching analytics from MongoDB...');
       const [
         totalAnalyses,
         recentAnalyses,
@@ -298,6 +336,8 @@ class MongoDatabase {
         dailyActivityMap[item._id] = item.count;
       });
       
+      console.log('✅ Analytics fetched from MongoDB successfully');
+      
       return {
         totalAnalyses,
         recentAnalyses,
@@ -321,11 +361,13 @@ class MongoDatabase {
 
   async deleteAnalysis(id) {
     try {
+      console.log(`🗑️ Deleting analysis ${id} from MongoDB...`);
       const result = await this.Analysis.findByIdAndDelete(id);
       if (result) {
         console.log(`🗑️ Analysis deleted from MongoDB with ID: ${id}`);
         return true;
       }
+      console.log(`❌ Analysis ${id} not found for deletion`);
       return false;
     } catch (error) {
       console.error('Error deleting analysis from MongoDB:', error);
@@ -335,11 +377,13 @@ class MongoDatabase {
 
   async updateAnalysis(id, updateData) {
     try {
+      console.log(`✏️ Updating analysis ${id} in MongoDB...`);
       const result = await this.Analysis.findByIdAndUpdate(
         id,
         { ...updateData, updated_at: new Date() },
         { new: true }
       );
+      console.log(`✅ Analysis ${id} updated in MongoDB`);
       return result ? true : false;
     } catch (error) {
       console.error('Error updating analysis in MongoDB:', error);
@@ -349,12 +393,17 @@ class MongoDatabase {
 
   async toggleFavorite(id) {
     try {
+      console.log(`❤️ Toggling favorite for analysis ${id} in MongoDB...`);
       const analysis = await this.Analysis.findById(id);
-      if (!analysis) return false;
+      if (!analysis) {
+        console.log(`❌ Analysis ${id} not found for favorite toggle`);
+        return false;
+      }
       
       analysis.is_favorite = !analysis.is_favorite;
       await analysis.save();
       
+      console.log(`✅ Analysis ${id} favorite status: ${analysis.is_favorite}`);
       return analysis.is_favorite;
     } catch (error) {
       console.error('Error toggling favorite in MongoDB:', error);
@@ -364,7 +413,9 @@ class MongoDatabase {
 
   async incrementViewCount(id) {
     try {
+      console.log(`👁️ Incrementing view count for analysis ${id} in MongoDB...`);
       await this.Analysis.findByIdAndUpdate(id, { $inc: { view_count: 1 } });
+      console.log(`✅ View count incremented for analysis ${id}`);
       return true;
     } catch (error) {
       console.error('Error incrementing view count in MongoDB:', error);
@@ -375,6 +426,7 @@ class MongoDatabase {
   // User operations
   async saveUser(userData) {
     try {
+      console.log('👤 Saving user to MongoDB...');
       const user = new this.User({
         ...userData,
         preferences: userData.preferences ? JSON.stringify(userData.preferences) : null,
@@ -392,8 +444,14 @@ class MongoDatabase {
 
   async getUser(id) {
     try {
+      console.log(`👤 Fetching user ${id} from MongoDB...`);
       const user = await this.User.findById(id);
-      if (!user) return null;
+      if (!user) {
+        console.log(`❌ User ${id} not found in MongoDB`);
+        return null;
+      }
+      
+      console.log(`✅ Found user ${id} in MongoDB`);
       
       return {
         id: user._id.toString(),
@@ -415,6 +473,7 @@ class MongoDatabase {
 
   async getUserByEmail(email) {
     try {
+      console.log(`📧 Fetching user by email from MongoDB...`);
       const user = await this.User.findOne({ email });
       return user ? this.getUser(user._id) : null;
     } catch (error) {
@@ -425,11 +484,13 @@ class MongoDatabase {
 
   async updateUser(id, updateData) {
     try {
+      console.log(`👤 Updating user ${id} in MongoDB...`);
       const result = await this.User.findByIdAndUpdate(
         id,
         { ...updateData, last_active: new Date() },
         { new: true }
       );
+      console.log(`✅ User ${id} updated in MongoDB`);
       return result ? true : false;
     } catch (error) {
       console.error('Error updating user in MongoDB:', error);
@@ -440,6 +501,17 @@ class MongoDatabase {
   async getHealth() {
     try {
       const isConnected = mongoose.connection.readyState === 1;
+      console.log(`🏥 MongoDB health check - Connected: ${isConnected}`);
+      
+      if (!isConnected) {
+        return {
+          status: 'disconnected',
+          database: 'mongodb',
+          connected: false,
+          error: 'Not connected to MongoDB'
+        };
+      }
+
       const dbStats = await mongoose.connection.db.stats();
       
       const [totalAnalyses, totalUsers] = await Promise.all([
@@ -452,10 +524,12 @@ class MongoDatabase {
         .sort({ created_at: -1 })
         .select('created_at');
       
+      console.log(`✅ MongoDB health check passed - ${totalAnalyses} analyses, ${totalUsers} users`);
+      
       return {
-        status: isConnected ? 'healthy' : 'disconnected',
+        status: 'healthy',
         database: 'mongodb',
-        connected: isConnected,
+        connected: true,
         totalAnalyses,
         totalUsers,
         lastAnalysis: lastAnalysis?.created_at?.toISOString() || null,
@@ -467,6 +541,7 @@ class MongoDatabase {
         }
       };
     } catch (error) {
+      console.error('❌ MongoDB health check failed:', error);
       return {
         status: 'error',
         database: 'mongodb',

@@ -38,6 +38,8 @@ async function initializeServices() {
     await storageService.initialize();
     
     console.log('✅ All services initialized successfully');
+    console.log(`📊 Database: ${databaseService.getType()}`);
+    console.log(`💾 Storage: ${storageService.getType()}`);
   } catch (error) {
     console.error('❌ Service initialization failed:', error);
     process.exit(1);
@@ -76,6 +78,10 @@ app.get('/api/health', async (req, res) => {
       storageService.getHealth()
     ]);
     
+    console.log('🏥 Health check requested');
+    console.log(`📊 Database: ${dbHealth.status} (${dbHealth.database || dbHealth.type})`);
+    console.log(`💾 Storage: ${storageHealth.status} (${storageHealth.storage || storageHealth.type})`);
+    
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -90,6 +96,7 @@ app.get('/api/health', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Health check failed:', error);
     res.status(500).json({
       status: 'error',
       error: error.message,
@@ -105,6 +112,12 @@ app.post('/api/upload', upload.single('media'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
+    console.log('📁 File upload requested:', {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    });
+
     // Generate unique filename
     const filename = storageService.generateUniqueFilename(req.file.originalname);
     
@@ -116,8 +129,11 @@ app.post('/api/upload', upload.single('media'), async (req, res) => {
       originalname: req.file.originalname,
       mimetype: req.file.mimetype,
       size: req.file.size,
-      url: uploadResult.url
+      url: uploadResult.url,
+      path: `/uploads/${uploadResult.filename}`
     };
+
+    console.log('✅ File uploaded successfully:', fileInfo.filename);
 
     res.json({ 
       success: true, 
@@ -125,7 +141,7 @@ app.post('/api/upload', upload.single('media'), async (req, res) => {
       message: 'File uploaded successfully'
     });
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('❌ Upload error:', error);
     res.status(500).json({ error: 'Upload failed: ' + error.message });
   }
 });
@@ -134,6 +150,14 @@ app.post('/api/upload', upload.single('media'), async (req, res) => {
 app.post('/api/analyze-mood', async (req, res) => {
   try {
     const { emotions, colorAnalysis, preferences, moodQuizData, filename } = req.body;
+    
+    console.log('🧠 Mood analysis requested:', {
+      filename,
+      emotionsCount: emotions?.length || 0,
+      hasColorAnalysis: !!colorAnalysis,
+      hasPreferences: !!preferences,
+      hasMoodQuiz: !!moodQuizData
+    });
     
     if (!emotions || !Array.isArray(emotions)) {
       return res.status(400).json({ error: 'Invalid emotions data' });
@@ -149,6 +173,8 @@ app.post('/api/analyze-mood', async (req, res) => {
         dominantEmotion = emotion.name;
       }
     });
+
+    console.log(`🎭 Dominant emotion detected: ${dominantEmotion} (${(maxScore * 100).toFixed(1)}%)`);
 
     // Create enhanced prompt with all available context
     let contextualInfo = `Detected emotion: "${dominantEmotion}" with ${(maxScore * 100).toFixed(1)}% confidence.`;
@@ -191,6 +217,7 @@ app.post('/api/analyze-mood', async (req, res) => {
     // Try to use OpenAI if available
     if (openai) {
       try {
+        console.log('🤖 Using OpenAI for playlist generation...');
         const completion = await openai.chat.completions.create({
           model: "gpt-3.5-turbo",
           messages: [{ role: "user", content: enhancedPrompt }],
@@ -198,11 +225,14 @@ app.post('/api/analyze-mood', async (req, res) => {
         });
 
         aiResponse = JSON.parse(completion.choices[0].message.content);
+        console.log('✅ OpenAI playlist generated successfully');
       } catch (aiError) {
-        console.error('OpenAI API error:', aiError);
+        console.error('❌ OpenAI API error:', aiError);
+        console.log('🔄 Falling back to enhanced fallback playlist...');
         aiResponse = getUltraEnhancedFallbackPlaylist(dominantEmotion, preferences, colorAnalysis, moodQuizData);
       }
     } else {
+      console.log('🔄 Using enhanced fallback playlist (no OpenAI key)...');
       // Use enhanced fallback
       aiResponse = getUltraEnhancedFallbackPlaylist(dominantEmotion, preferences, colorAnalysis, moodQuizData);
     }
@@ -223,8 +253,12 @@ app.post('/api/analyze-mood', async (req, res) => {
       file_type: null  // Could be added from upload info
     };
 
+    console.log('💾 Saving analysis to database...');
+    
     // Save analysis to database
     const analysisId = await databaseService.saveAnalysis(analysisData);
+
+    console.log(`✅ Analysis completed and saved with ID: ${analysisId}`);
 
     res.json({
       success: true,
@@ -237,7 +271,7 @@ app.post('/api/analyze-mood', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Analysis error:', error);
+    console.error('❌ Analysis error:', error);
     res.status(500).json({ error: 'Analysis failed: ' + error.message });
   }
 });
@@ -245,8 +279,10 @@ app.post('/api/analyze-mood', async (req, res) => {
 // Get specific analysis
 app.get('/api/analysis/:id', async (req, res) => {
   try {
+    console.log(`🔍 Analysis ${req.params.id} requested`);
     const analysis = await databaseService.getAnalysis(req.params.id);
     if (!analysis) {
+      console.log(`❌ Analysis ${req.params.id} not found`);
       return res.status(404).json({ error: 'Analysis not found' });
     }
     
@@ -275,9 +311,10 @@ app.get('/api/analysis/:id', async (req, res) => {
         : analysis.mood_quiz_data;
     }
     
+    console.log(`✅ Analysis ${req.params.id} retrieved successfully`);
     res.json(result);
   } catch (error) {
-    console.error('Get analysis error:', error);
+    console.error('❌ Get analysis error:', error);
     res.status(500).json({ error: 'Failed to retrieve analysis: ' + error.message });
   }
 });
@@ -286,6 +323,8 @@ app.get('/api/analysis/:id', async (req, res) => {
 app.get('/api/recent-analyses', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
+    console.log(`📋 Recent analyses requested (limit: ${limit})`);
+    
     const analyses = await databaseService.getRecentAnalyses(limit);
     
     const result = analyses.map(analysis => {
@@ -313,9 +352,10 @@ app.get('/api/recent-analyses', async (req, res) => {
       return parsed;
     });
     
+    console.log(`✅ Retrieved ${result.length} recent analyses`);
     res.json(result);
   } catch (error) {
-    console.error('Get recent analyses error:', error);
+    console.error('❌ Get recent analyses error:', error);
     res.status(500).json({ error: 'Failed to retrieve analyses: ' + error.message });
   }
 });
@@ -334,6 +374,8 @@ app.get('/api/search', async (req, res) => {
       isFavorite: req.query.isFavorite === 'true',
       userId: req.query.userId
     };
+    
+    console.log('🔍 Search analyses requested with filters:', filters);
     
     const result = await databaseService.searchAnalyses(filters);
     
@@ -363,9 +405,10 @@ app.get('/api/search', async (req, res) => {
       return parsed;
     });
     
+    console.log(`✅ Search completed: ${result.analyses.length} results found`);
     res.json(result);
   } catch (error) {
-    console.error('Search error:', error);
+    console.error('❌ Search error:', error);
     res.status(500).json({ error: 'Search failed: ' + error.message });
   }
 });
@@ -373,10 +416,12 @@ app.get('/api/search', async (req, res) => {
 // Analytics dashboard
 app.get('/api/analytics/dashboard', async (req, res) => {
   try {
+    console.log('📊 Analytics dashboard requested');
     const analytics = await databaseService.getAnalytics();
+    console.log('✅ Analytics retrieved successfully');
     res.json(analytics);
   } catch (error) {
-    console.error('Analytics error:', error);
+    console.error('❌ Analytics error:', error);
     res.status(500).json({ error: 'Failed to get analytics: ' + error.message });
   }
 });
@@ -384,10 +429,12 @@ app.get('/api/analytics/dashboard', async (req, res) => {
 // Toggle favorite
 app.post('/api/analysis/:id/favorite', async (req, res) => {
   try {
+    console.log(`❤️ Toggle favorite requested for analysis ${req.params.id}`);
     const isFavorite = await databaseService.toggleFavorite(req.params.id);
+    console.log(`✅ Favorite toggled: ${isFavorite}`);
     res.json({ success: true, isFavorite });
   } catch (error) {
-    console.error('Toggle favorite error:', error);
+    console.error('❌ Toggle favorite error:', error);
     res.status(500).json({ error: 'Failed to toggle favorite: ' + error.message });
   }
 });
@@ -395,14 +442,17 @@ app.post('/api/analysis/:id/favorite', async (req, res) => {
 // Delete analysis
 app.delete('/api/analysis/:id', async (req, res) => {
   try {
+    console.log(`🗑️ Delete analysis ${req.params.id} requested`);
     const success = await databaseService.deleteAnalysis(req.params.id);
     if (success) {
+      console.log(`✅ Analysis ${req.params.id} deleted successfully`);
       res.json({ success: true, message: 'Analysis deleted successfully' });
     } else {
+      console.log(`❌ Analysis ${req.params.id} not found for deletion`);
       res.status(404).json({ error: 'Analysis not found' });
     }
   } catch (error) {
-    console.error('Delete analysis error:', error);
+    console.error('❌ Delete analysis error:', error);
     res.status(500).json({ error: 'Failed to delete analysis: ' + error.message });
   }
 });
@@ -410,10 +460,12 @@ app.delete('/api/analysis/:id', async (req, res) => {
 // Storage management endpoints
 app.get('/api/storage/stats', async (req, res) => {
   try {
+    console.log('💾 Storage stats requested');
     const stats = await storageService.getStorageStats();
+    console.log('✅ Storage stats retrieved');
     res.json(stats);
   } catch (error) {
-    console.error('Storage stats error:', error);
+    console.error('❌ Storage stats error:', error);
     res.status(500).json({ error: 'Failed to get storage stats: ' + error.message });
   }
 });
@@ -421,15 +473,31 @@ app.get('/api/storage/stats', async (req, res) => {
 app.post('/api/storage/cleanup', async (req, res) => {
   try {
     const daysOld = parseInt(req.body.daysOld) || 30;
+    console.log(`🧹 Storage cleanup requested (${daysOld} days old)`);
     const deletedCount = await storageService.cleanupOldFiles(daysOld);
+    console.log(`✅ Storage cleanup completed: ${deletedCount} files deleted`);
     res.json({ success: true, deletedFiles: deletedCount });
   } catch (error) {
-    console.error('Storage cleanup error:', error);
+    console.error('❌ Storage cleanup error:', error);
     res.status(500).json({ error: 'Failed to cleanup storage: ' + error.message });
   }
 });
 
-// Enhanced fallback playlist generator (same as before but moved here)
+// Debug endpoint to force MongoDB connection
+app.post('/api/debug/force-mongo', async (req, res) => {
+  try {
+    console.log('🔧 Force MongoDB connection requested');
+    await databaseService.forceMongoConnection();
+    const health = await databaseService.getHealth();
+    console.log('✅ Force MongoDB connection successful');
+    res.json({ success: true, health });
+  } catch (error) {
+    console.error('❌ Force MongoDB connection failed:', error);
+    res.status(500).json({ error: 'Failed to force MongoDB connection: ' + error.message });
+  }
+});
+
+// Enhanced fallback playlist generator
 function getUltraEnhancedFallbackPlaylist(emotion, preferences, colorAnalysis, moodQuizData) {
   const basePlaylist = getDefaultPlaylist(emotion);
   
@@ -476,7 +544,7 @@ function getUltraEnhancedFallbackPlaylist(emotion, preferences, colorAnalysis, m
   };
 }
 
-// Default playlist functions (same as before)
+// Default playlist functions
 function getDefaultPlaylist(emotion) {
   const playlists = {
     happy: [
@@ -573,6 +641,8 @@ async function startServer() {
       console.log(`📊 Database: ${databaseService.getType()}`);
       console.log(`💾 Storage: ${storageService.getType()}`);
       console.log(`🤖 OpenAI: ${openai ? 'enabled' : 'disabled (using fallback playlists)'}`);
+      console.log('');
+      console.log('🎯 Ready to analyze vibes and create amazing playlists!');
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
