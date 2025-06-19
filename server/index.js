@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fs from 'fs';
 import OpenAI from 'openai';
-import Database from './database.js';
+import { saveMockAnalysis, getMockAnalysis, getRecentMockAnalyses } from './mockData.js';
 // Ensure environment variables are loaded
 import dotenv from 'dotenv';
 dotenv.config();
@@ -16,9 +16,6 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// Initialize database
-const db = new Database();
 
 // Middleware
 app.use(cors());
@@ -129,7 +126,7 @@ app.post('/api/analyze-mood', async (req, res) => {
     ${moodQuizData ? 'Heavily consider the user\'s color psychology insights and mood words to create deep emotional resonance.' : ''}
     ${preferences ? 'Integrate the user\'s genre preferences and energy level while incorporating the detected mood and visual aesthetics.' : 'Focus on the emotional state and visual mood detected.'}
     
-    The playlist should feel like it was crafted by someone who truly understands the user's complete emotional and aesthetic state.
+    The playlist should feel like it was crafted by someone who truly understands the user\'s complete emotional and aesthetic state.
     
     Respond in JSON format:
     {
@@ -165,17 +162,17 @@ app.post('/api/analyze-mood', async (req, res) => {
       aiResponse = getUltraEnhancedFallbackPlaylist(dominantEmotion, preferences, colorAnalysis, moodQuizData);
     }
 
-    // Save analysis to database
-    const analysisId = await db.saveAnalysis({
+    // Save analysis to mock data
+    const analysisId = saveMockAnalysis({
       filename,
       dominantEmotion,
       confidence: maxScore,
       vibe: aiResponse.vibe,
       moodCategory: aiResponse.moodCategory,
-      playlist: JSON.stringify(aiResponse.playlist),
-      colorAnalysis: colorAnalysis ? JSON.stringify(colorAnalysis) : null,
-      preferences: preferences ? JSON.stringify(preferences) : null,
-      moodQuizData: moodQuizData ? JSON.stringify(moodQuizData) : null
+      playlist: aiResponse.playlist,
+      colorAnalysis: colorAnalysis || null,
+      preferences: preferences || null,
+      moodQuizData: moodQuizData || null
     });
 
     res.json({
@@ -196,23 +193,28 @@ app.post('/api/analyze-mood', async (req, res) => {
 
 app.get('/api/analysis/:id', async (req, res) => {
   try {
-    const analysis = await db.getAnalysis(req.params.id);
+    const analysis = getMockAnalysis(req.params.id);
     if (!analysis) {
       return res.status(404).json({ error: 'Analysis not found' });
     }
     
-    analysis.playlist = JSON.parse(analysis.playlist);
+    // Parse JSON fields
+    const result = {
+      ...analysis,
+      playlist: JSON.parse(analysis.playlist)
+    };
+    
     if (analysis.color_analysis) {
-      analysis.colorAnalysis = JSON.parse(analysis.color_analysis);
+      result.colorAnalysis = JSON.parse(analysis.color_analysis);
     }
     if (analysis.preferences) {
-      analysis.preferences = JSON.parse(analysis.preferences);
+      result.preferences = JSON.parse(analysis.preferences);
     }
     if (analysis.mood_quiz_data) {
-      analysis.moodQuizData = JSON.parse(analysis.mood_quiz_data);
+      result.moodQuizData = JSON.parse(analysis.mood_quiz_data);
     }
     
-    res.json(analysis);
+    res.json(result);
   } catch (error) {
     console.error('Get analysis error:', error);
     res.status(500).json({ error: 'Failed to retrieve analysis' });
@@ -221,14 +223,27 @@ app.get('/api/analysis/:id', async (req, res) => {
 
 app.get('/api/recent-analyses', async (req, res) => {
   try {
-    const analyses = await db.getRecentAnalyses();
-    res.json(analyses.map(analysis => ({
-      ...analysis,
-      playlist: JSON.parse(analysis.playlist),
-      colorAnalysis: analysis.color_analysis ? JSON.parse(analysis.color_analysis) : null,
-      preferences: analysis.preferences ? JSON.parse(analysis.preferences) : null,
-      moodQuizData: analysis.mood_quiz_data ? JSON.parse(analysis.mood_quiz_data) : null
-    })));
+    const analyses = getRecentMockAnalyses();
+    const result = analyses.map(analysis => {
+      const parsed = {
+        ...analysis,
+        playlist: JSON.parse(analysis.playlist)
+      };
+      
+      if (analysis.color_analysis) {
+        parsed.colorAnalysis = JSON.parse(analysis.color_analysis);
+      }
+      if (analysis.preferences) {
+        parsed.preferences = JSON.parse(analysis.preferences);
+      }
+      if (analysis.mood_quiz_data) {
+        parsed.moodQuizData = JSON.parse(analysis.mood_quiz_data);
+      }
+      
+      return parsed;
+    });
+    
+    res.json(result);
   } catch (error) {
     console.error('Get recent analyses error:', error);
     res.status(500).json({ error: 'Failed to retrieve analyses' });
@@ -435,5 +450,5 @@ function getDefaultPlaylist(emotion) {
 }
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT} - Using mock data (no database)`);
 });
