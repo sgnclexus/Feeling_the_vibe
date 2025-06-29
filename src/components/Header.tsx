@@ -19,7 +19,6 @@ const Header: React.FC<HeaderProps> = ({
   onQuickUpload,
   showQuickUpload = false 
 }) => {
-  const [isWhiteLogo, setIsWhiteLogo] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
@@ -34,7 +33,6 @@ const Header: React.FC<HeaderProps> = ({
   }, []);
 
   const handleLogoClick = () => {
-    setIsWhiteLogo(!isWhiteLogo);
     setIsSpinning(true);
     setTimeout(() => setIsSpinning(false), 1000);
   };
@@ -81,19 +79,15 @@ const Header: React.FC<HeaderProps> = ({
                 className="relative w-16 h-16 rounded-full overflow-hidden shadow-2xl group-hover:shadow-purple-500/50 transition-shadow duration-300"
               >
                 {!logoError ? (
-                  <AnimatePresence mode="wait">
-                    <motion.img
-                      key={isWhiteLogo ? 'white' : 'black'}
-                      src={isWhiteLogo ? '/white_circle_360x360.png' : '/black_circle_360x360.png'}
-                      alt="Feeling the Vibe Logo"
-                      className="w-full h-full object-cover"
-                      initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
-                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, rotate: 180 }}
-                      transition={{ duration: 0.5, ease: "easeInOut" }}
-                      onError={handleImageError}
-                    />
-                  </AnimatePresence>
+                  <motion.img
+                    src="/white_circle_360x360.png"
+                    alt="Feeling the Vibe Logo"
+                    className="w-full h-full object-cover"
+                    initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    onError={handleImageError}
+                  />
                 ) : (
                   /* Fallback icon if image doesn't load */
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-full">
