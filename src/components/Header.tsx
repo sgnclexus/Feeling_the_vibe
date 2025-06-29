@@ -21,6 +21,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isWhiteLogo, setIsWhiteLogo] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
   // Automatic spin animation every 15-20 seconds
   useEffect(() => {
@@ -36,6 +37,11 @@ const Header: React.FC<HeaderProps> = ({
     setIsWhiteLogo(!isWhiteLogo);
     setIsSpinning(true);
     setTimeout(() => setIsSpinning(false), 1000);
+  };
+
+  const handleImageError = () => {
+    console.error('Logo image failed to load');
+    setLogoError(true);
   };
 
   return (
@@ -74,29 +80,26 @@ const Header: React.FC<HeaderProps> = ({
                 }}
                 className="relative w-16 h-16 rounded-full overflow-hidden shadow-2xl group-hover:shadow-purple-500/50 transition-shadow duration-300"
               >
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={isWhiteLogo ? 'white' : 'black'}
-                    src={isWhiteLogo ? '/white_circle_360x360.png' : '/black_circle_360x360.png'}
-                    alt="Feeling the Vibe Logo"
-                    className="w-full h-full object-cover"
-                    initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, rotate: 180 }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                    onError={(e) => {
-                      console.error('Logo image failed to load:', e);
-                      // Fallback to a simple circle with icon if image fails
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                </AnimatePresence>
-                
-                {/* Fallback icon if image doesn't load */}
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Music className="w-8 h-8 text-white" />
-                </div>
+                {!logoError ? (
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={isWhiteLogo ? 'white' : 'black'}
+                      src={isWhiteLogo ? '/white_circle_360x360.png' : '/black_circle_360x360.png'}
+                      alt="Feeling the Vibe Logo"
+                      className="w-full h-full object-cover"
+                      initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, rotate: 180 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                      onError={handleImageError}
+                    />
+                  </AnimatePresence>
+                ) : (
+                  /* Fallback icon if image doesn't load */
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-full">
+                    <Music className="w-8 h-8 text-white" />
+                  </div>
+                )}
                 
                 {/* Glow effect */}
                 <motion.div
