@@ -77,7 +77,7 @@ const Header: React.FC<HeaderProps> = ({
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={isWhiteLogo ? 'white' : 'black'}
-                    src={isWhiteLogo ? '/white_circle_360x360.png' : '/black_circle_360x360.png'}
+                    src={isWhiteLogo ? '/public/white_circle_360x360.png' : '/public/black_circle_360x360.png'}
                     alt="Feeling the Vibe Logo"
                     className="w-full h-full object-cover"
                     initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
