@@ -52,11 +52,3 @@ firestore-debug.log
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Allow PNG files in public directory
-!public/*.png
-!public/**/*.png
-
-# Allow specific logo files
-!**/black_circle_360x360.png
-!**/white_circle_360x360.png
