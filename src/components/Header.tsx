@@ -84,8 +84,19 @@ const Header: React.FC<HeaderProps> = ({
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
                     exit={{ opacity: 0, scale: 0.8, rotate: 180 }}
                     transition={{ duration: 0.5, ease: "easeInOut" }}
+                    onError={(e) => {
+                      console.error('Logo image failed to load:', e);
+                      // Fallback to a simple circle with icon if image fails
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
                   />
                 </AnimatePresence>
+                
+                {/* Fallback icon if image doesn't load */}
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Music className="w-8 h-8 text-white" />
+                </div>
                 
                 {/* Glow effect */}
                 <motion.div
