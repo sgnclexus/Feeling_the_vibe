@@ -22,15 +22,41 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Database files
-server/*.db
 *.db
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.mp4
-*.webm
-*.mov
+*.sqlite
+*.sqlite3
+
+# Server uploads (but allow public assets)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Allow PNG files in public directory
+!public/*.png
+!public/**/*.png
+
+# Allow specific logo files
+!**/black_circle_360x360.png
+!**/white_circle_360x360.png
