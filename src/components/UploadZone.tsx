@@ -111,7 +111,8 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onAnalysisComplete, userPrefere
         },
       });
       
-      onAnalysisComplete(enhancedResult, `http://localhost:3001${uploadResult.file.path}`);
+      // Use the URL from the upload result instead of constructing localhost URL
+      onAnalysisComplete(enhancedResult, uploadResult.file.url);
 
     } catch (error) {
       console.error('Error:', error);

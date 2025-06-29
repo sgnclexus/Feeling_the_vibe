@@ -45,7 +45,8 @@ const RecentAnalyses: React.FC<RecentAnalysesProps> = ({ onSelectAnalysis }) => 
       playlist: JSON.parse(analysis.playlist)
     };
 
-    const fileUrl = `http://localhost:3001/uploads/${analysis.filename}`;
+    // Use the file_url directly from the analysis instead of constructing localhost URL
+    const fileUrl = analysis.file_url || `/uploads/${analysis.filename}`;
     onSelectAnalysis(result, fileUrl);
   };
 

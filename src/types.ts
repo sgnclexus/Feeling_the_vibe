@@ -41,6 +41,7 @@ export interface StoredAnalysis {
   color_analysis?: string;
   preferences?: string;
   mood_quiz_data?: string;
+  file_url?: string; // Added file_url property to handle both local and S3 URLs
 }
 
 export interface MusicPreferences {
